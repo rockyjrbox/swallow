@@ -430,6 +430,7 @@ body.in-game #elim.show{display:flex}
 <script src="three.min.js"></script>
 <script src="GLTFLoader.js"></script>
 <script src="colyseus.js"></script>
+<script src="local-sim.js"></script>
 <script>
 /* =========================================================================
    Swallow — online 3D client. Renders the AUTHORITATIVE server state with the
@@ -873,8 +874,15 @@ async function play() {
   initAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume(); // unlock audio on the click gesture
   connState = "connecting"; $("#err").textContent = "connecting…"; leftIntentionally = false;
   try {
-    const client = new Colyseus.Client(ENDPOINT);
-    room = await client.joinOrCreate(selectedRoom, { name, color: getSkin().rim });
+    // A real game-server URL (meta[name=game-server] or window.GAME_SERVER) → live multiplayer via Colyseus.
+    // Otherwise run the ENTIRE game locally in the browser (single-player vs bots) — no server needed.
+    const serverURL = (window.GAME_SERVER || (document.querySelector('meta[name="game-server"]') || {}).content || "").trim();
+    if (serverURL) {
+      const client = new Colyseus.Client(ENDPOINT);
+      room = await client.joinOrCreate(selectedRoom, { name, color: getSkin().rim });
+    } else {
+      room = new LocalRoom(selectedRoom, { name, color: getSkin().rim });
+    }
     myId = room.sessionId; connState = "joined"; $("#err").textContent = "";
     runPeakLevel = 1;
     if (selectedRoom === "battle") startCountdown(() => showScreen("game")); else showScreen("game");
