@@ -1,0 +1,11 @@
+# Fresh deps are installed in-image via `npm ci`; never copy host node_modules over them.
+**/node_modules
+# Test/dev scripts and the throwaway 2D debug client are not shipped to prod.
+server/*.mjs
+client
+# Docs + specs stay out of the runtime image.
+*.md
+.git
+.gitignore
+Dockerfile
+.dockerignore

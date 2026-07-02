@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Swallow — eat the whole city</title>
+<meta name="description" content="Swallow — a real-time multiplayer hole battle royale. Eat the whole city, outgrow every rival, be the last hole standing. Play free at swallow.games." />
+<meta name="theme-color" content="#0d1220" />
+<!-- Split deploy (client on Vercel/CDN, server elsewhere): put your server's wss:// URL here. Empty = same origin. -->
+<meta name="game-server" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://swallow.games" />
+<meta property="og:title" content="Swallow — eat the whole city" />
+<meta property="og:description" content="A real-time multiplayer hole battle royale. Eat, grow, dominate. swallow.games" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Swallow — eat the whole city" />
+<meta name="twitter:description" content="A real-time multiplayer hole battle royale. Eat, grow, dominate. swallow.games" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%239945ff'/><stop offset='1' stop-color='%2314f195'/></linearGradient></defs><rect width='32' height='32' rx='7' fill='%230d1220'/><circle cx='16' cy='16' r='9' fill='none' stroke='url(%23g)' stroke-width='4'/><circle cx='16' cy='16' r='4' fill='%23050608'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --green:#14f195; --purple:#9945ff; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#9fd2f5;color:#0d1220;font-family:ui-monospace,Menlo,Consolas,monospace}
+  #c{position:fixed;inset:0;display:block;touch-action:none;cursor:crosshair}
+  .hud{position:fixed;pointer-events:none;z-index:3;font-size:12px}
+  #top{top:12px;left:12px;color:#0d1220;text-shadow:0 1px 2px rgba(255,255,255,.6)}
+  #board{top:12px;right:12px;text-align:right;min-width:170px}
+  #board .row{display:flex;justify-content:space-between;gap:14px;margin-top:2px;background:rgba(255,255,255,.6);border-radius:6px;padding:2px 8px}
+  #board .me{color:#0aa766;font-weight:700}
+  .pill{display:inline-block;background:rgba(255,255,255,.78);border:1px solid rgba(13,18,32,.1);border-radius:9px;padding:4px 9px;margin-top:5px;box-shadow:0 4px 12px rgba(20,30,60,.12)}
+  #dbg{position:fixed;left:12px;bottom:10px;font-size:11px;color:#33405c;z-index:3;pointer-events:none;text-shadow:0 1px 2px rgba(255,255,255,.6)}
+  #mini{position:fixed;right:12px;bottom:12px;width:150px;height:150px;background:rgba(13,18,32,.5);border:1px solid rgba(255,255,255,.18);border-radius:10px;z-index:3;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  #dbg .e{color:#c0392b;font-weight:700}
+  #banner{position:fixed;top:44%;left:50%;transform:translateX(-50%);font-size:32px;font-weight:700;color:#fff;opacity:0;transition:opacity .3s;pointer-events:none;z-index:3;text-shadow:0 3px 14px rgba(0,0,0,.35)}
+</style>
+<style id="vrui">
+:root{
+  --purple:#9945ff;--green:#14f195;--hot:#ff4040;--hot2:#ff5c5c;
+  --bg:#080a12;--panel:#0b0e18;--ink:#0d1220;
+  --tx:#eef1f7;--mut:#9ba1b5;--dim:#8a90a2;--faint:#5a6072;
+  --pl:#c4a3ff;--gl:#7ff2c4;--gold:#f0d48a;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --disp:'Space Grotesk',system-ui,sans-serif;
+}
+html,body{background:var(--bg);color:var(--tx);font-family:var(--disp);overflow:hidden}
+.gg{background:linear-gradient(90deg,var(--purple),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes vr-spin{to{transform:rotate(360deg)}}
+@keyframes vr-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes vr-bannerpop{0%{transform:scale(.6);opacity:0}55%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes vr-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes vr-ring{to{transform:rotate(360deg)}}
+@keyframes vr-zone{0%,100%{opacity:.35}50%{opacity:.8}}
+@keyframes vr-count{0%{transform:scale(.4);opacity:0}25%{transform:scale(1);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(1.5);opacity:0}}
+@keyframes vr-sheen{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes vr-rise{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes vr-fall{0%{transform:translateX(280px) rotate(0) scale(1);opacity:0}12%{opacity:1}82%{opacity:1}100%{transform:translateX(24px) rotate(220deg) scale(.06);opacity:0}}
+@keyframes vr-twinkle{0%,100%{opacity:.15}50%{opacity:.9}}
+@keyframes vr-scrollcue{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(7px);opacity:1}}
+@keyframes vr-glow{0%,100%{box-shadow:0 0 60px 8px rgba(153,69,255,.5),0 0 120px 30px rgba(20,241,149,.25)}50%{box-shadow:0 0 90px 18px rgba(153,69,255,.7),0 0 160px 44px rgba(20,241,149,.4)}}
+@keyframes vr-driftx{0%{transform:translate(0,0)}50%{transform:translate(-24px,-14px)}100%{transform:translate(0,0)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+/* screen overlay router */
+.scr{position:fixed;inset:0;z-index:40;display:none;color:var(--tx)}
+.scr.active{display:block}
+
+/* HUD — glass pills */
+#top{top:14px;left:14px;max-width:72%}
+.pill{display:inline-block;font-family:var(--mono);background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(13,18,32,.1);border-radius:11px;padding:7px 12px;margin:0 6px 6px 0;box-shadow:0 4px 18px rgba(20,30,60,.13)}
+.pill .pl{display:block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#5a6072}
+.pill .pv{display:block;font-size:17px;font-weight:700;color:var(--ink);line-height:1.15}
+.pill .pv.g{color:#14884f}
+#board{top:14px;right:14px;width:196px;font-family:var(--mono);background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(13,18,32,.1);border-radius:13px;padding:9px 8px;box-shadow:0 4px 18px rgba(20,30,60,.13);min-width:0}
+#board .lbh{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#5a6072;padding:2px 6px 7px}
+#board .row{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:8px;margin:0}
+#board .row.me{background:rgba(20,241,149,.14)}
+#board .rk{font-size:11px;color:#8a90a2;width:14px}
+#board .dot{width:9px;height:9px;border-radius:50%;flex:none}
+#board .nm{font-family:var(--disp);font-size:12px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#board .row.me .nm{font-weight:700;color:#14884f}
+#board .th{font-size:8px;color:#ff4040;font-weight:700}
+#board .ms{margin-left:auto;font-size:12px;font-weight:700;color:var(--ink)}
+#mini{right:14px;bottom:14px;width:150px;height:150px;background:rgba(13,18,32,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:14px;box-shadow:0 6px 22px rgba(0,0,0,.3)}
+#banner{font-family:var(--disp);font-size:64px;font-weight:700;background:linear-gradient(90deg,var(--purple),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 8px 40px rgba(0,0,0,.3);top:42%}
+#dbg{color:#8a90a2}
+
+/* toast */
+.vr-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:80;background:rgba(13,18,32,.94);border:1px solid rgba(153,69,255,.45);color:#e6e9f2;font-family:var(--mono);font-size:13px;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:88vw;text-align:center}
+.vr-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.vr-score{position:fixed;z-index:5;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--mono);font-weight:700;font-size:15px;color:#fff;text-shadow:0 2px 7px rgba(0,0,0,.55),0 0 3px rgba(0,0,0,.4);will-change:transform,opacity;animation:vr-score .85s cubic-bezier(.2,.9,.3,1) forwards}
+#comboPill{display:none;position:fixed;top:58%;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;font-family:var(--mono);font-weight:700;font-size:26px;color:#ffd166;text-shadow:0 3px 12px rgba(0,0,0,.5);transition:transform .12s}
+body.in-game #comboPill.show{display:block}
+#comboPill.pop{transform:translateX(-50%) scale(1.35)}
+#feed{position:fixed;top:64px;right:14px;z-index:4;display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:none}
+.feedline{font-family:var(--mono);font-size:12px;font-weight:700;padding:6px 11px;border-radius:9px;background:rgba(13,18,32,.78);color:#e6e9f2;border:1px solid rgba(255,255,255,.14);box-shadow:0 4px 14px rgba(0,0,0,.3);animation:vr-rise .25s ease}
+.feedline .gold{color:#ffd166}.feedline .hot{color:#ff6b6b}.feedline .grn{color:#7ff2c4}
+@keyframes vr-score{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}20%{opacity:1;transform:translate(-50%,-95%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-260%) scale(.95)}}
+
+/* ===== LANDING ===== */
+.landing{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:radial-gradient(120% 80% at 50% -8%,#161d33 0%,#0a0e1b 46%,#05060a 100%)}
+.star{position:absolute;border-radius:50%;background:#fff}
+.neb{position:absolute;border-radius:50%;filter:blur(34px);pointer-events:none}
+.lhead{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px clamp(18px,4vw,32px);background:linear-gradient(to bottom,rgba(5,6,10,.72),transparent);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+.wm{font-weight:700;font-size:18px;letter-spacing:.01em}
+.hmark{position:relative;width:26px;height:26px;flex:none;display:inline-block}
+.hmark::before{content:"";position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(from 210deg,var(--purple),var(--green),var(--purple));animation:vr-ring 8s linear infinite}
+.hmark::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 42%,#05060a 50%,#171d31)}
+.wbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:11px;cursor:pointer;background:rgba(153,69,255,.16);border:1px solid rgba(153,69,255,.45);color:#d3bcff;font-family:var(--disp);font-size:13px;font-weight:600}
+.wbtn:hover{background:rgba(153,69,255,.26)}
+.wbtn .sq{width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--purple),var(--green))}
+.wbadge{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;padding:2px 6px;border-radius:5px;background:rgba(153,69,255,.2);color:var(--pl)}
+.hero{position:relative;min-height:calc(100% - 58px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:6px clamp(18px,5vw,40px) 44px}
+.ticker{display:inline-flex;align-items:center;gap:13px;padding:8px 17px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-family:var(--mono);font-size:11.5px;color:#c6cad6;flex-wrap:wrap;justify-content:center;animation:vr-rise .5s ease}
+.liveDot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:vr-pulse 1.4s infinite}
+.sep{opacity:.35}
+.void{position:relative;width:clamp(140px,21vw,196px);height:clamp(140px,21vw,196px);margin:2px auto 0}
+.void .obj{position:absolute;left:50%;top:50%}
+.void .obj>span{display:block;border-radius:3px;animation:vr-fall linear infinite}
+.void .glow{position:absolute;inset:8%;border-radius:50%;animation:vr-glow 4s ease-in-out infinite}
+.void .disk{position:absolute;inset:-16px;border-radius:50%;background:conic-gradient(from 0deg,var(--purple),var(--green),var(--hot2),var(--purple));-webkit-mask:radial-gradient(circle,transparent 59%,#000 60%);mask:radial-gradient(circle,transparent 59%,#000 60%);filter:blur(1px);animation:vr-ring 7s linear infinite}
+.void .eh{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 42%,#000 44%,#0b0f1c 72%,#1e2740 100%);box-shadow:inset 0 12px 44px rgba(0,0,0,.9),0 0 0 2px rgba(240,212,138,.32)}
+.void .eh2{position:absolute;inset:22%;border-radius:50%;background:radial-gradient(circle at 46% 38%,rgba(120,90,180,.35),transparent 60%)}
+.htitle{margin:0;font-size:clamp(48px,9.5vw,96px);font-weight:700;line-height:.82;letter-spacing:-.035em}
+.htitle .run{background:linear-gradient(90deg,var(--purple),var(--green),var(--purple));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 26px rgba(20,241,149,.45));animation:vr-sheen 4s linear infinite}
+.hsub{margin:0;font-size:clamp(16px,2.6vw,26px);font-weight:500;color:#b6bccd;max-width:22ch}
+.hsub b{color:var(--tx);font-weight:500}
+.meta{display:flex;gap:22px;font-family:var(--mono);font-size:11px;color:var(--dim);flex-wrap:wrap;justify-content:center}
+.meta b{color:#fff;font-size:14px;font-weight:700}
+.meta b.g{color:var(--gl)}
+.cta{display:flex;gap:11px;flex-wrap:wrap;justify-content:center;width:100%;max-width:460px;margin-top:4px}
+.namein{flex:1 1 150px;min-width:140px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:13px;padding:15px 16px;color:#fff;font-family:var(--disp);font-size:16px;font-weight:600;outline:none;text-align:center}
+.btnp{flex:2 1 200px;padding:15px 26px;border:none;border-radius:13px;cursor:pointer;font-family:var(--disp);font-size:17px;font-weight:700;color:#0b0e18;background:linear-gradient(90deg,var(--purple),var(--green));box-shadow:0 12px 34px rgba(20,241,149,.32)}
+.btnp:hover{filter:brightness(1.08)}
+.link{background:none;border:none;cursor:pointer;color:#9ba1b5;font-family:var(--disp);font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.link:hover{color:#fff}
+.scrollcue{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--faint)}
+.scrollcue span{font-size:16px;animation:vr-scrollcue 1.6s ease-in-out infinite}
+.section{position:relative;padding:clamp(40px,7vw,72px) clamp(20px,5vw,48px);border-top:1px solid rgba(255,255,255,.06)}
+.center{text-align:center}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
+.stitle{font-size:clamp(26px,4.5vw,40px);font-weight:700;letter-spacing:-.02em}
+.loopgrid{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;max-width:940px;margin:34px auto 0}
+.loopcard{flex:1 1 240px;max-width:300px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:24px}
+.loopcard .n{font-family:var(--mono);font-size:34px;font-weight:700;line-height:1;margin-bottom:12px}
+.loopcard .t{font-size:21px;font-weight:700;margin-bottom:7px}
+.loopcard .d{font-size:13.5px;line-height:1.5;color:var(--mut)}
+.modegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;max-width:960px;margin:34px auto 26px}
+.modecard{display:flex;flex-direction:column;gap:13px;padding:22px;border-radius:18px;cursor:pointer;transition:.18s;text-align:left;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09)}
+.modecard:hover{border-color:rgba(255,255,255,.28)}
+.modecard .top{display:flex;align-items:center;justify-content:space-between}
+.modecard .ring{position:relative;width:46px;height:46px;border-radius:50%}
+.modecard .mb{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;white-space:nowrap;padding:4px 8px;border-radius:6px}
+.modecard .mt{font-size:22px;font-weight:700;color:#fff}
+.modecard .md{font-size:13.5px;line-height:1.5;color:var(--mut)}
+.gate{display:flex;flex-direction:column;gap:12px;max-width:460px;margin:0 auto}
+.stakeband{text-align:center;overflow:hidden}
+.stakeband .bg{position:absolute;inset:0;background:radial-gradient(90% 120% at 50% 120%,rgba(20,241,149,.14),transparent 70%);pointer-events:none}
+.stakestats{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);margin-top:4px}
+.sstat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 22px}
+.sstat .k{font-size:9px;letter-spacing:.12em;color:var(--dim)}
+.sstat .v{font-size:22px;font-weight:700;color:#fff}
+.sstat.win{background:linear-gradient(180deg,rgba(20,241,149,.14),rgba(255,255,255,.02));border-color:rgba(20,241,149,.4)}
+.sstat.win .k{color:var(--gl)}
+.sstat.win .v{color:var(--green)}
+.footcta{text-align:center;padding:clamp(48px,8vw,90px) clamp(20px,5vw,48px)}
+
+/* ===== HUD extras (only in game) ===== */
+#boostPill,#zonePill,#zoneGlow,#elim,#hudControls,#hudHint{display:none}
+#boostPill{position:fixed;top:70px;left:14px;z-index:3;background:rgba(0,229,255,.16);border:1px solid rgba(0,229,255,.55);border-radius:11px;padding:7px 12px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 4px 18px rgba(0,120,160,.25)}
+body.in-game #boostPill.show{display:block}
+#boostPill .bl{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;font-weight:700;color:#00b8d4;letter-spacing:.08em}
+#boostPill .bar{margin-top:5px;height:4px;width:120px;background:rgba(0,229,255,.2);border-radius:3px;overflow:hidden}
+#boostPill .bar>i{display:block;height:100%;width:100%;background:#00e5ff;border-radius:3px}
+#zonePill{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:4;align-items:center;gap:8px;background:rgba(255,64,64,.16);border:1px solid rgba(255,64,64,.6);border-radius:11px;padding:7px 13px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:vr-pulse 1.6s infinite}
+body.in-game #zonePill.show{display:flex}
+#zonePill .d{width:8px;height:8px;border-radius:50%;background:#ff4040}
+#zonePill .t{font-family:var(--mono);font-size:11px;font-weight:700;color:#ff4040;letter-spacing:.06em}
+#zoneGlow{position:fixed;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 120px 20px rgba(255,64,64,.4);animation:vr-zone 2.4s ease-in-out infinite}
+body.in-game #zoneGlow.show{display:block}
+#hudControls{position:fixed;bottom:14px;left:14px;z-index:4;gap:8px}
+body.in-game #hudControls{display:flex}
+.hbtn{width:38px;height:38px;border-radius:11px;border:1px solid rgba(13,18,32,.1);background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 4px 14px rgba(20,30,60,.12);cursor:pointer;font-size:15px;color:#0d1220}
+.hbtn:hover{background:#fff}
+#hudHint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:4;background:rgba(13,18,32,.6);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:7px 16px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-family:var(--mono);font-size:11px;color:#c6cad6;letter-spacing:.04em;transition:opacity .5s}
+body.in-game #hudHint.show{display:block}
+#elim{position:fixed;inset:0;z-index:6;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(13,18,32,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+body.in-game #elim.show{display:flex}
+#elim .big{font-family:var(--disp);font-size:58px;font-weight:700;color:#ff4040;letter-spacing:-.01em;animation:vr-bannerpop .5s cubic-bezier(.2,1.4,.4,1)}
+#elim .sub{font-family:var(--mono);font-size:13px;color:#c6cad6}
+
+/* ===== shared surface chrome ===== */
+.pagebg{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:radial-gradient(120% 80% at 50% -8%,#161d33 0%,#0a0e1b 46%,#05060a 100%)}
+.veil{position:absolute;inset:0;pointer-events:none}
+.modalwrap{position:relative;min-height:100%;display:flex;align-items:center;justify-content:center;padding:36px 24px}
+.card{position:relative;width:100%;background:rgba(13,18,32,.86);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 80px rgba(0,0,0,.5);border-radius:20px;padding:24px;animation:vr-rise .35s ease}
+.btnfull{width:100%;padding:13px;border:none;border-radius:12px;cursor:pointer;font-family:var(--disp);font-size:15px;font-weight:700;color:#0b0e18;background:linear-gradient(90deg,var(--purple),var(--green))}
+.btnfull:hover{filter:brightness(1.08)}
+.btnghost{padding:13px;border:1px solid rgba(255,255,255,.14);border-radius:12px;cursor:pointer;font-family:var(--disp);font-size:14px;font-weight:600;color:#c6cad6;background:rgba(255,255,255,.04)}
+.btnghost:hover{background:rgba(255,255,255,.08)}
+.pageback{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:14px 18px;background:linear-gradient(to bottom,rgba(5,6,10,.7),transparent);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
+.backbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#c6cad6;font-family:var(--disp);font-size:13px;font-weight:600}
+.backbtn:hover{background:rgba(255,255,255,.12)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.gcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:22px}
+.kbd{padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;box-shadow:0 2px 0 rgba(255,255,255,.08);font-family:var(--mono);font-size:13px;color:#c6cad6}
+.rule{border-radius:16px;padding:20px}
+.rule .rt{font-size:16px;font-weight:700;margin-bottom:6px}
+.rule .rd{font-size:13px;color:var(--mut);line-height:1.5}
+.tierbars{display:flex;align-items:flex-end;justify-content:center;gap:clamp(6px,1.6vw,16px);flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
+.tier{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
+.tier .tn{font-family:var(--mono);font-size:9.5px;color:var(--dim);white-space:nowrap}
+
+/* countdown */
+.cd{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
+.cd .lbl{font-family:var(--mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--pl)}
+.cd .ringwrap{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center}
+.cd .r1{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(20,241,149,.4);animation:vr-ring 3s linear infinite}
+.cd .r2{position:absolute;inset:18px;border-radius:50%;border:2px solid rgba(153,69,255,.4)}
+.cd .num{font-size:150px;font-weight:700;line-height:1;background:linear-gradient(90deg,var(--purple),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
+.cd .num.pop{animation:vr-count 1s ease-in-out}
+.cd .go{font-family:var(--disp);font-size:18px;font-weight:500;color:#e6e9f2}
+
+/* results */
+.badgechip{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;padding:5px 11px;border-radius:8px}
+.rrow{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;margin-bottom:5px}
+.rrow .rk{font-family:var(--mono);font-size:14px;font-weight:700;width:20px}
+.rrow .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.rrow .nm{font-family:var(--disp);font-size:15px;font-weight:500;color:#fff}
+.rrow .ms{margin-left:auto;font-family:var(--mono);font-size:15px;font-weight:700;color:#e6e9f2}
+.rstat{background:rgba(255,255,255,.04);border-radius:11px;padding:11px 13px}
+.rstat .k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.rstat .v{font-family:var(--mono);font-size:19px;font-weight:700;color:#fff}
+
+/* skins */
+.skinhead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.chip2{display:flex;align-items:center;gap:7px;border-radius:11px;padding:8px 13px;font-family:var(--mono);font-size:13px;font-weight:700}
+.skinwrap{display:flex;flex-wrap:wrap;gap:22px}
+.skinprev{flex:1 1 200px;max-width:260px;display:flex;flex-direction:column;align-items:center;gap:16px;background:radial-gradient(circle at 50% 35%,rgba(153,69,255,.14),transparent 70%);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:26px 20px}
+.skinprev .pv{position:relative;width:140px;height:140px;animation:vr-float 5s ease-in-out infinite}
+.skinprev .pv .rr{position:absolute;inset:-5px;border-radius:50%;background:conic-gradient(from 210deg,var(--purple),var(--green),var(--purple));animation:vr-ring 9s linear infinite}
+.skinprev .pv .fill{position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 6px 20px rgba(0,0,0,.5)}
+.skinprev .pv .hole{position:absolute;inset:24px;border-radius:50%;background:radial-gradient(circle at 50% 42%,#05060a 60%,transparent)}
+.skingrid{flex:1 1 340px;display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:11px;align-content:start}
+.stile{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;padding:15px 10px;border-radius:15px;cursor:pointer;transition:.15s;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+.stile:hover{border-color:rgba(255,255,255,.28)}
+.stile.eq{background:rgba(20,241,149,.08);border-color:rgba(20,241,149,.5)}
+.stile .sw{position:relative;width:60px;height:60px;border-radius:50%;box-shadow:inset 0 4px 12px rgba(0,0,0,.55),0 4px 14px rgba(0,0,0,.3)}
+.stile .sw.lk{opacity:.55}
+.stile .sw .lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;opacity:.85}
+.stile .snm{font-size:13px;font-weight:600;color:#fff;text-align:center}
+.stile .sst{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.04em;text-align:center}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud" id="top">
+  <div class="pill"><span class="pl">Level</span><span class="pv">Lv&nbsp;<span id="lvl">1</span></span></div>
+  <div class="pill"><span class="pl">Mass</span><span class="pv g" id="score">0</span></div>
+  <div class="pill"><span class="pl">Time</span><span class="pv" id="time">—</span></div>
+  <div class="pill"><span class="pl">Rank</span><span class="pv" id="rank">—</span></div>
+  <div class="pill"><span class="pl">City</span><span class="pv" id="city">0%</span></div>
+</div>
+<div class="hud" id="board"></div>
+<div id="dbg">booting…</div>
+<canvas id="mini" width="150" height="150"></canvas>
+<div id="banner"></div>
+<div id="scr-landing" class="scr active">
+  <div class="landing">
+    <span class="star" style="top:9%;left:14%;width:3px;height:3px;animation:vr-twinkle 3.2s infinite"></span>
+    <span class="star" style="top:16%;left:82%;width:2px;height:2px;animation:vr-twinkle 4.1s .4s infinite"></span>
+    <span class="star" style="top:26%;left:30%;width:2px;height:2px;background:#c4a3ff;animation:vr-twinkle 2.8s .8s infinite"></span>
+    <span class="star" style="top:6%;left:60%;width:2px;height:2px;background:#7ff2c4;animation:vr-twinkle 3.6s .2s infinite"></span>
+    <span class="star" style="top:33%;left:74%;width:3px;height:3px;animation:vr-twinkle 4.4s 1s infinite"></span>
+    <div class="neb" style="top:-12%;left:-8%;width:440px;height:440px;background:radial-gradient(circle,rgba(153,69,255,.34),transparent 68%);animation:vr-driftx 17s ease-in-out infinite"></div>
+    <div class="neb" style="top:18%;right:-12%;width:480px;height:480px;background:radial-gradient(circle,rgba(20,241,149,.26),transparent 68%);animation:vr-driftx 22s ease-in-out infinite reverse"></div>
+
+    <div class="lhead">
+      <div style="display:flex;align-items:center;gap:10px"><span class="hmark"></span><span class="wm"><span class="gg">Swallow</span></span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="backbtn" id="skins-open" style="padding:9px 13px">Skins</button>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="ticker">
+        <span style="display:flex;align-items:center;gap:6px"><span class="liveDot"></span>1,284 playing now</span>
+        <span class="sep">·</span><span style="color:#7ff2c4;font-weight:700">Free — no wallet needed</span>
+        <span class="sep">·</span><span style="color:#c4a3ff">staking coming soon</span>
+      </div>
+      <div class="void" aria-hidden="true">
+        <span class="obj" style="transform:rotate(18deg)"><span style="width:17px;height:17px;background:#3ba9ff;box-shadow:0 0 10px #3ba9ff88;animation-duration:3.2s"></span></span>
+        <span class="obj" style="transform:rotate(63deg)"><span style="width:11px;height:11px;background:#ffd23b;animation-duration:3.8s;animation-delay:-.6s"></span></span>
+        <span class="obj" style="transform:rotate(108deg)"><span style="width:20px;height:20px;background:#ff8c3b;box-shadow:0 0 10px #ff8c3b88;animation-duration:3.4s;animation-delay:-1.2s"></span></span>
+        <span class="obj" style="transform:rotate(150deg)"><span style="width:9px;height:9px;border-radius:50%;background:#fff;animation-duration:4.2s;animation-delay:-.9s"></span></span>
+        <span class="obj" style="transform:rotate(196deg)"><span style="width:15px;height:15px;background:#9945ff;box-shadow:0 0 10px #9945ff88;animation-duration:3.6s;animation-delay:-1.8s"></span></span>
+        <span class="obj" style="transform:rotate(238deg)"><span style="width:10px;height:10px;border-radius:50%;background:#7ff2c4;animation-duration:3.9s;animation-delay:-2.4s"></span></span>
+        <span class="obj" style="transform:rotate(284deg)"><span style="width:18px;height:18px;background:#ff5c5c;box-shadow:0 0 10px #ff5c5c88;animation-duration:3.3s;animation-delay:-1.5s"></span></span>
+        <span class="obj" style="transform:rotate(325deg)"><span style="width:12px;height:12px;background:#3ba9ff;animation-duration:4s;animation-delay:-.3s"></span></span>
+        <div class="glow"></div><div class="disk"></div><div class="eh"></div><div class="eh2"></div>
+      </div>
+      <h1 class="htitle"><span class="run">Swallow</span></h1>
+      <p class="hsub">Swallow the city. <b>Outgrow everyone.</b></p>
+      <div class="meta" id="landing-meta"></div>
+      <div class="cta">
+        <input id="name" class="namein" maxlength="16" placeholder="Name" value="Player" />
+        <button id="play" class="btnp">Play →</button>
+      </div>
+      <button class="link" id="howto-link">New here? Learn how to play</button>
+      <div id="err" style="color:#ff8c8c;font-family:var(--mono);font-size:12px;min-height:14px"></div>
+      <div class="scrollcue">SCROLL<span>⌄</span></div>
+    </section>
+
+    <section class="section">
+      <div class="center"><div class="eyebrow" style="color:#14f195">The loop</div><div class="stitle">Eat. Grow. Dominate.</div></div>
+      <div class="loopgrid">
+        <div class="loopcard"><div class="n gg">01</div><div class="t">Swallow</div><div class="d">Drift over anything smaller than your void — pedestrians, cars, whole buildings — and gulp it down with a satisfying crunch.</div></div>
+        <div class="loopcard"><div class="n gg">02</div><div class="t">Grow</div><div class="d">Every bite widens your hole. The bigger you get, the bigger the prey: skyscrapers, stadiums, monuments.</div></div>
+        <div class="loopcard"><div class="n gg">03</div><div class="t">Outlast</div><div class="d">Out-mass every rival before the timer — or the closing zone — ends the run. Winner takes the pot.</div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="center"><div class="eyebrow" style="color:#c4a3ff">Choose your run</div><div class="stitle">Three ways to swallow the city</div></div>
+      <div class="modegrid" id="modegrid"></div>
+      <div class="gate">
+        <button id="play2" class="btnp" style="width:100%">Play →</button>
+        <div style="text-align:center;margin-top:10px;font-family:var(--mono);font-size:11px;color:#8a90a2">Free to play · no wallet, no sign-up</div>
+      </div>
+    </section>
+
+    <section class="section stakeband">
+      <div class="bg"></div>
+      <div style="position:relative;max-width:640px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:18px">
+        <div class="eyebrow" style="color:#7ff2c4">Stake · swallow · settle</div>
+        <div style="font-size:clamp(28px,5vw,46px);font-weight:700;letter-spacing:-.02em;line-height:1.05">Ante up SOL.<br><span class="gg">Winner takes the pot.</span></div>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:#9ba1b5;max-width:46ch">Every player stakes the same entry into an on-chain escrow. Last hole standing sweeps the whole pot, settled straight to their wallet. <b style="color:#c4a3ff;font-weight:600">Coming soon — play free today.</b></p>
+        <div class="stakestats">
+          <div class="sstat"><div class="k">ENTRY</div><div class="v">0.05 ◎</div></div>
+          <div class="sstat"><div class="k">×5 PLAYERS</div><div class="v">0.25 ◎</div></div>
+          <div class="sstat win"><div class="k">WINNER TAKES</div><div class="v">0.25 ◎</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section footcta">
+      <div style="font-size:clamp(30px,6vw,58px);font-weight:700;letter-spacing:-.03em;margin-bottom:22px">Swallow it all.</div>
+      <button id="play3" class="btnp" style="flex:none;padding:17px 44px;font-size:18px">Play Swallow →</button>
+      <div style="margin-top:26px;font-family:var(--mono);font-size:10px;color:#4a5064;letter-spacing:.05em">Prototype · staking coming soon</div>
+    </section>
+  </div>
+</div>
+
+<!-- HUD extras -->
+<div id="boostPill"><div class="bl">⚡ SPEED BOOST</div><div class="bar"><i id="boostBar"></i></div></div>
+<div id="comboPill">x2</div>
+<div id="feed"></div>
+<div id="zonePill"><span class="d"></span><span class="t" id="zoneTxt">ZONE CLOSING</span></div>
+<div id="zoneGlow"></div>
+<div id="hudControls"><button class="hbtn" id="btnFs" title="Fullscreen">⤢</button><button class="hbtn" id="btnMute" title="Sound">♪</button></div>
+<div id="hudHint">drag to steer</div>
+<div id="elim"><div class="big">ELIMINATED</div><div class="sub" id="elimSub">No respawns · spectating</div></div>
+
+<!-- ===== HOW TO PLAY ===== -->
+<div id="scr-howto" class="scr"><div class="pagebg">
+  <div class="pageback"><button class="backbtn" id="howto-back">← Back</button></div>
+  <div class="neb" style="top:16%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(153,69,255,.22),transparent 68%)"></div>
+  <section class="center" style="padding:clamp(24px,5vw,50px) clamp(20px,5vw,44px) clamp(18px,4vw,28px)">
+    <div class="eyebrow" style="color:#14f195">Field guide</div>
+    <h1 style="margin:0;font-size:clamp(34px,7vw,64px);font-weight:700;letter-spacing:-.03em">How to Play</h1>
+    <p style="margin:12px auto 0;font-size:clamp(15px,2.4vw,19px);color:#9ba1b5;max-width:40ch;line-height:1.5">You are a black hole loose in a living city. Eat everything smaller than you, dodge everything bigger, and be the last void standing.</p>
+  </section>
+  <section style="padding:8px clamp(20px,5vw,44px) 0;max-width:900px;margin:0 auto"><div class="grid2">
+    <div class="gcard"><div class="eyebrow" style="color:#c4a3ff;margin-bottom:12px">Desktop</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Steer with your mouse</div><div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center"><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span><span style="font-family:var(--mono);font-size:12px;color:#8a90a2">or move the cursor — the hole chases it</span></div></div>
+    <div class="gcard"><div class="eyebrow" style="color:#7ff2c4;margin-bottom:12px">Mobile</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Drag anywhere to steer</div><div style="font-size:13.5px;color:#9ba1b5;line-height:1.5">Press and drag; the hole glides toward your thumb. One finger, one input.</div></div>
+  </div></section>
+  <section style="padding:clamp(34px,6vw,56px) clamp(20px,5vw,44px);max-width:900px;margin:0 auto">
+    <div class="center" style="margin-bottom:26px"><div class="eyebrow" style="color:#c4a3ff">The food chain</div><div style="font-size:clamp(22px,4vw,32px);font-weight:700">Small snacks now. Monuments later.</div></div>
+    <div class="gcard" style="padding:26px 20px"><div class="tierbars" id="howto-tiers"></div><div style="display:flex;justify-content:space-between;margin-top:14px;font-family:var(--mono);font-size:10px"><span style="color:#14f195">← safe to swallow</span><span style="color:#ff5c5c">will swallow you →</span></div></div>
+  </section>
+  <section style="padding:0 clamp(20px,5vw,44px) clamp(34px,6vw,56px);max-width:900px;margin:0 auto"><div class="grid2">
+    <div class="rule" style="background:rgba(20,241,149,.06);border:1px solid rgba(20,241,149,.28)"><div class="rt" style="color:#7ff2c4">Eat smaller</div><div class="rd">Anything with less mass than you gets sucked in. Chain bites for a combo.</div></div>
+    <div class="rule" style="background:rgba(255,92,92,.06);border:1px solid rgba(255,92,92,.28)"><div class="rt" style="color:#ff8c8c">Flee bigger</div><div class="rd">Rivals larger than you show <b style="color:#ff5c5c">red</b> — they can eat YOU. Keep your distance.</div></div>
+    <div class="rule" style="background:rgba(153,69,255,.06);border:1px solid rgba(153,69,255,.28)"><div class="rt" style="color:#c4a3ff">Grow relentlessly</div><div class="rd">More mass = bigger hole = bigger prey. Momentum snowballs — press it.</div></div>
+    <div class="rule" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)"><div class="rt" style="color:#fff">Mind the zone</div><div class="rd">In Battle, a danger zone closes in. Caught outside? You lose mass fast.</div></div>
+  </div></section>
+  <section style="padding:0 clamp(20px,5vw,44px) clamp(34px,6vw,56px);max-width:900px;margin:0 auto"><div style="display:flex;align-items:center;gap:16px;background:linear-gradient(90deg,rgba(0,229,255,.1),rgba(255,255,255,.02));border:1px solid rgba(0,229,255,.35);border-radius:18px;padding:20px 22px;flex-wrap:wrap"><span style="width:46px;height:46px;flex:none;border-radius:13px;background:rgba(0,229,255,.16);border:1px solid rgba(0,229,255,.5);display:flex;align-items:center;justify-content:center;font-size:22px;color:#00e5ff">⚡</span><div style="flex:1 1 220px"><div style="font-size:17px;font-weight:700;color:#fff">Speed Boost</div><div style="font-size:13px;color:#9ba1b5;line-height:1.5">Grab the cyan orb for 5 seconds of extra pace — chase a rival or bolt back into the zone.</div></div><span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#00b8d4;padding:6px 12px;border-radius:8px;background:rgba(0,229,255,.12)">5s · cyan</span></div></section>
+  <section class="center" style="padding:0 clamp(20px,5vw,44px) clamp(50px,8vw,80px)"><button class="btnp" id="howto-play" style="flex:none;padding:16px 40px">Got it — let's play →</button></section>
+</div></div>
+
+<!-- ===== WALLET & STAKE ===== -->
+<div id="scr-wallet" class="scr"><div class="pagebg"><div class="veil" style="background:rgba(8,10,18,.42)"></div>
+  <div class="pageback" style="background:transparent"><button class="backbtn" id="wallet-back">← Back</button></div>
+  <div class="modalwrap" style="min-height:calc(100% - 56px)"><div class="card" style="max-width:360px"><div id="wallet-body"></div></div></div>
+</div></div>
+
+<!-- ===== LOBBY ===== -->
+<div id="scr-lobby" class="scr"><div class="pagebg"><div class="veil" style="background:rgba(8,10,18,.5)"></div>
+  <div class="modalwrap"><div class="card" style="max-width:420px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div><div class="eyebrow" style="color:#c4a3ff;margin:0">Battle · staked <span class="wbadge">PREVIEW</span></div><div style="font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;gap:9px" id="lobby-status">Filling up <span style="width:8px;height:8px;border-radius:50%;background:#14f195;animation:vr-pulse 1.2s infinite"></span></div></div><div style="text-align:right"><div class="eyebrow" style="color:#8a90a2;margin:0">Pot</div><div style="font-family:var(--mono);font-size:24px;font-weight:700;color:#14f195" id="lobby-pot">0.15 ◎</div></div></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:5px;overflow:hidden"><div id="lobby-bar" style="height:100%;width:60%;background:linear-gradient(90deg,#9945ff,#14f195);border-radius:5px;transition:width .4s"></div></div><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fff" id="lobby-count">3 / 5</span></div>
+    <div id="lobby-players"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)"><span style="font-size:12px;color:#8a90a2">Leave now for a full refund</span><button class="backbtn" id="lobby-leave" style="color:#ff8c8c;background:rgba(255,92,92,.08);border-color:rgba(255,92,92,.4)">Leave</button></div>
+  </div></div>
+</div></div>
+
+<!-- ===== COUNTDOWN ===== -->
+<div id="scr-countdown" class="scr"><div class="pagebg" style="overflow:hidden"><div class="veil" style="background:rgba(8,10,18,.55)"></div>
+  <div class="cd"><div class="lbl" id="cd-label">Battle · winner takes all</div><div class="ringwrap"><span class="r1"></span><span class="r2"></span><div class="num" id="cd-num">3</div></div><div class="go">Get ready to swallow the city</div></div>
+</div></div>
+
+<!-- ===== RESULTS ===== -->
+<div id="scr-results" class="scr"><div class="pagebg"><div class="veil" style="background:rgba(8,10,18,.55)"></div>
+  <div class="modalwrap"><div class="card" style="max-width:480px" id="results-card"><div id="results-body"></div></div></div>
+</div></div>
+
+<!-- ===== SKINS ===== -->
+<div id="scr-skins" class="scr"><div class="pagebg" style="background:linear-gradient(160deg,#0d1220,#141a2e)">
+  <div class="pageback" style="background:transparent"><button class="backbtn" id="skins-back">← Back</button></div>
+  <div style="padding:2px 26px 32px">
+    <div class="skinhead"><div><div style="font-size:26px;font-weight:700;color:#fff">Skins</div><div style="font-size:13px;color:#9ba1b5;margin-top:2px">Earned by playing. Wear it your way.</div></div><div style="display:flex;gap:8px"><div class="chip2" id="skins-count" style="background:rgba(240,212,138,.1);border:1px solid rgba(240,212,138,.3);color:#f0d48a">3 / 8 unlocked</div></div></div>
+    <div class="skinwrap">
+      <div class="skinprev"><div class="eyebrow" style="color:#8a90a2;margin:0">Live preview</div><div class="pv"><span class="rr"></span><span class="fill" id="skin-prev-fill"></span><span class="hole"></span></div><div class="center"><div style="font-size:18px;font-weight:700;color:#fff" id="skin-prev-name">Nebula</div><div style="font-family:var(--mono);font-size:11px;color:#14f195;margin-top:2px" id="skin-prev-state">Equipped</div></div></div>
+      <div class="skingrid" id="skins-grid"></div>
+    </div>
+  </div>
+</div></div>
+
+<script src="three.min.js"></script>
+<script src="GLTFLoader.js"></script>
+<script src="colyseus.js"></script>
+<script>
+/* =========================================================================
+   Swallow — online 3D client. Renders the AUTHORITATIVE server state with the
+   real 3D look: GLB cars/buildings/trees, a stencil
+   "hole" cut into the ground. The client simulates NOTHING except its own
+   predicted hole position — every object, eat, and rival comes from the server.
+   ========================================================================= */
+const WORLD = 300, CELL = 42, ROAD = 10;
+const START_RADIUS = 1.4, BASE_SPEED = 15, PIT = 16, BOOST_MULT = 1.7, BOOST_DUR = 5;
+let muted = false, boostShownAt = 0, wasBoosting = false, runPeakLevel = 1, lastCombo = 1;
+const FINALE_SEC = 75; // classic FINAL FRENZY threshold — MUST mirror server CONFIG.finale.sec
+let finaleShown = false;
+let hudNext = 0, lastBoardHtml = ""; // throttle + diff-guard for the leaderboard rebuild
+const camFollow = { x: undefined, z: 0 };
+const predVel = { vx: 0, vz: 0 }; // prediction momentum — MUST mirror server ACCEL
+const MOVE_ACCEL = 8;
+// FLAT speed for all sizes (playtest-settled — see server speedFor). MUST mirror the server.
+const speedFor = (r) => BASE_SPEED;
+// Game-server address. Default = same origin (all-in-one host). For a split deploy
+// (static client on Vercel/CDN + server elsewhere), set the <meta name="game-server">
+// content to your server's wss:// URL, or define window.GAME_SERVER before this script.
+const ENDPOINT = (window.GAME_SERVER || (document.querySelector('meta[name="game-server"]') || {}).content || "").trim()
+  || location.origin.replace(/^http/, "ws");
+const DEBUG = /[?&]debug=1/.test(location.search); // ?debug=1 shows the on-screen diagnostics overlay
+
+const MODELS = {
+  car:           { foot: 4.6, yaw: Math.PI/2, urls: ["assets/cars/sedan.glb","assets/cars/sedan-sports.glb","assets/cars/suv.glb","assets/cars/suv-luxury.glb","assets/cars/hatchback-sports.glb","assets/cars/taxi.glb","assets/cars/van.glb","assets/cars/truck.glb","assets/cars/delivery.glb","assets/cars/police.glb","assets/cars/ambulance.glb","assets/cars/garbage-truck.glb"] },
+  tree:          { foot: 5.2, yaw: 0, urls: ["assets/nature/tree_cone.glb","assets/nature/tree_cone_dark.glb","assets/nature/tree_cone_fall.glb","assets/nature/tree_blocks.glb","assets/nature/tree_blocks_dark.glb","assets/nature/tree_blocks_fall.glb","assets/nature/plant_bushLarge.glb","assets/nature/plant_bushLargeTriangle.glb"] },
+  building_small:{ foot: 9.8, yaw: 0, urls: ["assets/city/low-detail-building-a.glb","assets/city/low-detail-building-c.glb","assets/city/low-detail-building-e.glb","assets/city/low-detail-building-h.glb","assets/city/low-detail-building-wide-a.glb","assets/city/low-detail-building-wide-b.glb"] },
+  building_mid:  { foot: 14.4, yaw: 0, urls: ["assets/city/building-a.glb","assets/city/building-b.glb","assets/city/building-c.glb","assets/city/building-e.glb","assets/city/building-g.glb","assets/city/building-i.glb","assets/city/building-k.glb","assets/city/building-m.glb"] },
+  skyscraper:    { foot: 20.8, yaw: 0, urls: ["assets/city/building-skyscraper-a.glb","assets/city/building-skyscraper-b.glb","assets/city/building-skyscraper-c.glb","assets/city/building-skyscraper-d.glb","assets/city/building-skyscraper-e.glb"] },
+  person:        { foot: 0.9, yaw: 0, urls: [] }, // procedural (below)
+  boost:         { foot: 1.4, yaw: 0, urls: [] }, // speed pickup (procedural)
+  lamp:          { foot: 0.8, yaw: 0, urls: [] },
+  hydrant:       { foot: 0.5, yaw: 0, urls: [] },
+  bench:         { foot: 1.5, yaw: 0, urls: [] },
+  cone:          { foot: 0.6, yaw: 0, urls: [] },
+  trash:         { foot: 0.6, yaw: 0, urls: [] },
+  fountain:      { foot: 4.4, yaw: 0, urls: [] },
+  factory:       { foot: 12.6, yaw: 0, urls: ["assets/factory/machine.glb", "assets/factory/hopper-high-square.glb", "assets/factory/structure-tall.glb"] },
+  crane:         { foot: 16.0, yaw: 0, urls: ["assets/factory/crane.glb"] },
+  bush:          { foot: 1.3, yaw: 0, urls: [] },
+  flowers:       { foot: 0.8, yaw: 0, urls: [] },
+  planter:       { foot: 1.0, yaw: 0, urls: [] },
+  kiosk:         { foot: 1.0, yaw: 0, urls: [] },
+  crate:         { foot: 1.6, yaw: 0, urls: [] },
+  statue:        { foot: 1.6, yaw: 0, urls: [] },
+  busstop:       { foot: 2.6, yaw: 0, urls: [] },
+  van:           { foot: 6.4, yaw: Math.PI / 2, urls: ["assets/cars/van.glb", "assets/cars/delivery.glb", "assets/cars/ambulance.glb"] },
+  bus:           { foot: 7.6, yaw: Math.PI / 2, urls: ["assets/cars/truck.glb", "assets/cars/garbage-truck.glb"] },
+  house:         { foot: 11.2, yaw: 0, urls: ["assets/city/low-detail-building-a.glb", "assets/city/low-detail-building-c.glb", "assets/city/low-detail-building-e.glb", "assets/city/low-detail-building-wide-a.glb"] },
+  mall:          { foot: 18.4, yaw: 0, urls: ["assets/city/building-b.glb", "assets/city/building-g.glb", "assets/city/building-k.glb"] },
+  office_tower:  { foot: 23.6, yaw: 0, urls: ["assets/city/building-skyscraper-a.glb", "assets/city/building-skyscraper-b.glb", "assets/city/building-skyscraper-c.glb"] },
+  hotel_tower:   { foot: 26.0, yaw: 0, urls: ["assets/city/building-skyscraper-d.glb", "assets/city/building-skyscraper-e.glb"] },
+  tower_tall:    { foot: 27.0, yaw: 0, urls: ["assets/city/building-skyscraper-a.glb", "assets/city/building-skyscraper-c.glb", "assets/city/building-skyscraper-e.glb"] },
+  megatower:     { foot: 30.0, yaw: 0, urls: ["assets/city/building-skyscraper-b.glb", "assets/city/building-skyscraper-d.glb"] },
+  stadium:       { foot: 32.0, yaw: 0, urls: [] },
+  monument:      { foot: 39.0, yaw: 0, urls: [] },
+};
+const PROTO = {}; // kind -> [loaded scenes]
+const SHADOW_KINDS = new Set(["skyscraper", "building_mid", "building_small", "car", "tree", "fountain", "factory", "crane", "statue", "busstop", "bush", "van", "bus", "house", "mall", "office_tower", "hotel_tower", "tower_tall", "megatower", "stadium", "monument"]);
+
+let scene, camera, renderer, sun, TEX = {};
+let room = null, myId = null, connState = "idle", lastError = "", started = false;
+let camHeight = 45, fps = 0, T = 0, shake = 0, audioCtx = null, lastEatT = 0;
+let _spinE = null, _spinQ = null; // created in initThree (needs THREE loaded)
+let selectedRoom = "arena", zoneRing = null, theme = null;
+const THEMES = [
+  { grass: "#6fae3f", sky: ["#2f7fd6", "#74b8ec", "#d3eeff"], fog: 0xbfe0f5 }, // day  (road/side hardcoded in buildGround)
+  { grass: "#8a9a46", sky: ["#e79a44", "#f0c88a", "#fbe6c2"], fog: 0xf0d0a8 }, // sunset
+  { grass: "#57a86a", sky: ["#3f9ec8", "#8fd2ea", "#e2f4ff"], fog: 0xcfeef8 }, // fresh
+];
+const particles = [];
+const _pgeo = new THREE.BoxGeometry(1, 1, 1); // shared spark geometry — burst reuses it (no per-eat geometry churn)
+const _v3 = new THREE.Vector3(); let lastFloatT = 0; // for floating "+N" score pop-ups
+const foodMeshes = new Map();   // food id -> {group, baseScale, sinking, sinkV, fall}
+const holeVis = new Map();      // hole id -> {mask,pit,ring,halo,renderPos}
+const predicted = { x: 0, z: 0, has: false };
+let input = { dx: 0, dz: 0 }, lastPing = 0, pingMs = 0;
+let pingTimer = 0, inputTimer = 0, leftIntentionally = false, resultsShown = false; // net timers (hoisted so replays don't leak duplicates)
+const keys = {}, pointer = { x: 0, y: 0, active: false };
+
+const $ = (s) => document.querySelector(s);
+// escape user-supplied strings (player names) before putting them in innerHTML — prevents XSS
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = (a) => a[a.length * Math.random() | 0];
+const mat = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .85, metalness: 0, flatShading: true }, o));
+// deterministic per-id pick so a given object always looks the same
+function hashPick(arr, id) { let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0; return arr[Math.abs(h) % arr.length]; }
+
+if (typeof THREE === "undefined") lastError = "three.js failed to load (need internet on first load)";
+if (typeof Colyseus === "undefined") lastError = "colyseus.js failed to load";
+
+// ----------------------------------------------------------- textures + stencil
+function skyTex() { const s = (theme || THEMES[0]).sky; const c = document.createElement("canvas"); c.width = 8; c.height = 256; const x = c.getContext("2d"); const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, s[0]); g.addColorStop(.5, s[1]); g.addColorStop(1, s[2]); x.fillStyle = g; x.fillRect(0, 0, 8, 256); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; }
+function pitTex() {
+  // hole.io look: a clean, neutral dark shaft (no purple swirl) with the faintest wall texture
+  const c = document.createElement("canvas"); c.width = 128; c.height = 128; const x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, 0, 128);
+  g.addColorStop(0, "#2a2a30"); g.addColorStop(.22, "#14141a"); g.addColorStop(.6, "#070709"); g.addColorStop(1, "#000");
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 14; i++) { // barely-there vertical wall lines
+    const px = Math.random() * 128;
+    x.strokeStyle = `rgba(60,60,70,${0.05 + Math.random() * 0.08})`;
+    x.lineWidth = 1 + Math.random() * 1.6; x.beginPath(); x.moveTo(px, 0); x.lineTo(px + (Math.random() * 12 - 6), 128); x.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.repeat.set(3, 1); t.encoding = THREE.sRGBEncoding; return t;
+}
+function maskMaterial() { return new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false, stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc, stencilZPass: THREE.ReplaceStencilOp }); }
+function groundStencil(m) { m.stencilWrite = true; m.stencilRef = 1; m.stencilFunc = THREE.NotEqualStencilFunc; m.stencilFail = m.stencilZFail = m.stencilZPass = THREE.KeepStencilOp; return m; }
+
+// ----------------------------------------------------------- scene
+function initThree() {
+  scene = new THREE.Scene();
+  _spinE = new THREE.Euler(); _spinQ = new THREE.Quaternion();
+  theme = pick(THEMES); // per-load palette variety
+  zoneRing = new THREE.Mesh(new THREE.RingGeometry(0.92, 1.0, 80), new THREE.MeshBasicMaterial({ color: 0xff4040, transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false }));
+  zoneRing.rotation.x = -Math.PI / 2; zoneRing.position.y = 0.2; zoneRing.renderOrder = 8; zoneRing.visible = false; scene.add(zoneRing);
+  TEX.sky = skyTex(); TEX.pit = pitTex();
+  scene.background = TEX.sky; scene.fog = new THREE.Fog(theme.fog, 130, 360);
+  // near 2 / far 800 (was 0.1 / 1200): the camera is always ≥30u above the ground, so a bigger near
+  // plane + tighter far hugely improves depth precision → no z-fighting flicker on roads when big.
+  camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 2, 800);
+  // low-end / mobile: touch pointer or a small screen → lighter renderer + shadows
+  const LOWEND = (typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches) || Math.min(innerWidth, innerHeight) < 640;
+  renderer = new THREE.WebGLRenderer({ canvas: $("#c"), antialias: !LOWEND, stencil: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, LOWEND ? 1.5 : 2)); renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = LOWEND ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap; renderer.outputEncoding = THREE.sRGBEncoding;
+  scene.add(new THREE.HemisphereLight(0xfff4e0, 0x6a7d92, 1.0));
+  sun = new THREE.DirectionalLight(0xffe9c4, 1.35); sun.castShadow = true; sun.shadow.mapSize.set(LOWEND ? 1024 : 2048, LOWEND ? 1024 : 2048);
+  const d = LOWEND ? 55 : 70; Object.assign(sun.shadow.camera, { left: -d, right: d, top: d, bottom: -d, near: 1, far: 320 }); sun.shadow.bias = -0.0004;
+  scene.add(sun); scene.add(sun.target);
+  buildGround();
+  addEventListener("resize", onResize);
+  addEventListener("keydown", (e) => { keys[e.key.toLowerCase()] = true; });
+  addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
+  $("#c").addEventListener("pointermove", (e) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
+  $("#c").addEventListener("pointerdown", (e) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
+  // release must STOP the hole (esp. touch) — without these, finger-up left it steering to the last point forever
+  ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => $("#c").addEventListener(ev, () => { pointer.active = false; }));
+  preloadAssets();
+}
+function onResize() { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); }
+
+function gplane(w, d, x, y, z, m) {
+  const me = new THREE.Mesh(new THREE.PlaneGeometry(w, d), m);
+  me.rotation.x = -Math.PI / 2; me.position.set(x, y, z); me.renderOrder = 2; me.receiveShadow = true; scene.add(me);
+}
+// procedural noise surface texture (grass / concrete / asphalt)
+function surfImg(base, cols, n) {
+  const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+  x.fillStyle = base; x.fillRect(0, 0, 64, 64);
+  for (let i = 0; i < n; i++) { x.fillStyle = cols[i % cols.length]; x.globalAlpha = 0.18 + Math.random() * 0.5; const s = 1 + Math.random() * 3; x.fillRect(Math.random() * 64, Math.random() * 64, s, s); }
+  x.globalAlpha = 1; const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
+}
+function tiledMat(img, rx, ry) {
+  const t = img.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry);
+  return groundStencil(new THREE.MeshStandardMaterial({ map: t, roughness: 1 }));
+}
+// deterministic block layout — MUST match the server's blockHash/blockType.
+function blockHash(bx, bz) {
+  const x = Math.round(bx) | 0, z = Math.round(bz) | 0;
+  let h = (x * 374761393 + z * 668265263) | 0;
+  h = ((h ^ (h >> 13)) * 1274126177) | 0;
+  return ((h ^ (h >> 16)) >>> 0) / 4294967296;
+}
+function blockType(bx, bz) {
+  const dist = Math.hypot(bx, bz);
+  if (dist < 16) return "open";
+  const zone = dist < WORLD * 0.22 ? "downtown" : dist < WORLD * 0.42 ? "midtown" : "outer";
+  const h = blockHash(bx, bz);
+  if (zone === "outer") return h < 0.18 ? "park" : h < 0.26 ? "industrial" : h < 0.33 ? "plaza" : "buildings";
+  if (zone === "midtown") return h < 0.09 ? "park" : h < 0.15 ? "plaza" : h < 0.30 ? "tower" : "buildings";
+  return h < 0.05 ? "park" : h < 0.15 ? "landmark" : h < 0.22 ? "plaza" : h < 0.52 ? "tower" : "buildings";
+}
+function buildGround() {
+  const W = WORLD, lines = []; for (let p = -W / 2 + CELL; p < W / 2; p += CELL) lines.push(p);
+  const grassImg = surfImg((theme || THEMES[0]).grass, ["#5f9e34", "#7cbf4a", "#86c95a", "#68a83a"], 300);
+  const concImg = surfImg("#b7bcc5", ["#aab0b9", "#c8ccd4", "#a0a5af"], 170);
+  const asphImg = surfImg("#3a3f4b", ["#454b58", "#2f343e", "#4d5360"], 220);
+  const sideImg = surfImg("#cdd2d9", ["#c0c5cd", "#dadde3", "#b6bbc4"], 130);
+
+  // base grass (shows through on park/open lots)
+  gplane(W, W, 0, 0, 0, tiledMat(grassImg, W / 12, W / 12));
+  // concrete lot on every non-park block, matching the server's block layout
+  const tile = CELL - ROAD, concreteMat = tiledMat(concImg, 4, 4);
+  for (let bx = -W / 2 + CELL / 2; bx < W / 2; bx += CELL)
+    for (let bz = -W / 2 + CELL / 2; bz < W / 2; bz += CELL) {
+      const t = blockType(bx, bz);
+      if (t === "park" || t === "open") continue;
+      gplane(tile, tile, bx, 0.012, bz, concreteMat);
+    }
+  // roads + sidewalks + markings
+  const asphX = tiledMat(asphImg, W / 7, ROAD / 7), asphZ = tiledMat(asphImg, ROAD / 7, W / 7);
+  const sideX = tiledMat(sideImg, W / 5, 2.2 / 5), sideZ = tiledMat(sideImg, 2.2 / 5, W / 5);
+  // polygonOffset biases the thin road markings toward the camera so they never z-fight the asphalt
+  const dashMat = groundStencil(mat(0xf2e9c9, { roughness: .8, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }));
+  const zebraMat = groundStencil(mat(0xf5f5f5, { roughness: .9, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }));
+  lines.forEach((p) => {
+    gplane(W, ROAD, 0, 0.02, p, asphX);
+    gplane(ROAD, W, p, 0.021, 0, asphZ);
+    [ROAD / 2 + 1.1, -(ROAD / 2 + 1.1)].forEach((off) => {
+      gplane(W, 2.2, 0, 0.025, p + off, sideX);
+      gplane(2.2, W, p + off, 0.025, 0, sideZ);
+    });
+    for (let s = -W / 2 + 4; s < W / 2; s += 7) {
+      let inter = false; for (const q of lines) if (Math.abs(s - q) < ROAD / 2 + 1) { inter = true; break; }
+      if (inter) continue;
+      gplane(2.2, 0.22, s, 0.028, p, dashMat);
+      gplane(0.22, 2.2, p, 0.028, s, dashMat);
+    }
+  });
+  lines.forEach((p) => lines.forEach((q) => {
+    if (Math.hypot(p, q) < W / 2 - CELL) {
+      for (const side of [-1, 1]) for (let s = 0; s < 3; s++) {
+        const off = (ROAD / 2 + 0.7 + s * 1.0) * side;
+        gplane(0.6, ROAD - 1.6, p + off, 0.029, q, zebraMat);
+        gplane(ROAD - 1.6, 0.6, p, 0.029, q + off, zebraMat);
+      }
+    }
+  }));
+  // (distant skyline ring removed — at the steep camera the off-map boxes read as floating gray slabs)
+}
+
+// ----------------------------------------------------------- assets
+function preloadAssets() {
+  if (!THREE.GLTFLoader) { onAssets(); return; }
+  const loader = new THREE.GLTFLoader();
+  const loadOne = (url) => new Promise((res) => loader.load(url, (gltf) => {
+    const root = gltf.scene; const box = new THREE.Box3().setFromObject(root); const sv = box.getSize(new THREE.Vector3());
+    root.userData.foot = Math.max(sv.x, sv.z) || 1; root.userData.minY = box.min.y;
+    root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    res(root);
+  }, undefined, () => res(null)));
+  const jobs = Object.entries(MODELS).map(async ([k, m]) => {
+    if (!m.urls.length) { PROTO[k] = null; return; }
+    const arr = (await Promise.all(m.urls.map(loadOne))).filter(Boolean);
+    PROTO[k] = arr.length ? arr : null;
+  });
+  Promise.all(jobs).then(onAssets);
+}
+let assetsReady = false;
+function onAssets() { assetsReady = true; }
+
+function tryModel(kind, foot, id) {
+  const arr = PROTO[kind]; if (!arr) return null;
+  const p = hashPick(arr, id); const c = p.clone(true);
+  const s = foot / (p.userData.foot || 1); c.scale.setScalar(s); c.position.y = -(p.userData.minY || 0) * s;
+  return c;
+}
+
+// procedural models (person + street props are always procedural; cars/buildings/
+// trees only fall back to these if their GLB fails to load). Authored at natural scale.
+function procedural(kind) {
+  const g = new THREE.Group();
+  if (kind === "person") {
+    const pal = pick([{ b: 0xc94c4c, h: 0xf6c89a, p: 0x3a3a4a }, { b: 0x4a90e2, h: 0xf6c89a, p: 0x2d3a4a }, { b: 0x6fcf97, h: 0xf6c89a, p: 0x3a4a2d }, { b: 0xb197fc, h: 0xe8b88a, p: 0x2d2d4a }, { b: 0xff9f43, h: 0xf6c89a, p: 0x2d4a4a }]);
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(.34, .5, .22), mat(pal.b)); torso.position.y = .65;
+    const lg = new THREE.BoxGeometry(.13, .42, .15);
+    const lL = new THREE.Mesh(lg, mat(pal.p)); lL.position.set(-.08, .21, 0); const lR = new THREE.Mesh(lg, mat(pal.p)); lR.position.set(.08, .21, 0);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(.26, .26, .26), mat(pal.h)); head.position.y = 1.05;
+    g.add(torso, lL, lR, head);
+  } else if (kind === "car" || kind === "van" || kind === "bus") {
+    const col = pick([0xff6b6b, 0x4dabf7, 0xffd43b, 0x69db7c, 0xffffff, 0x495057]);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.3, .62, 1.12), mat(col, { roughness: .4, metalness: .3 })); body.position.y = .5;
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(1.2, .5, 1.0), mat(0x22262e, { roughness: .2, metalness: .5 })); cab.position.set(-.1, .92, 0);
+    g.add(body, cab);
+  } else if (kind === "tree") {
+    const tr = new THREE.Mesh(new THREE.CylinderGeometry(.18, .24, 1.0, 6), mat(0x8a5a2b)); tr.position.y = .5;
+    const c1 = new THREE.Mesh(new THREE.ConeGeometry(1.0, 1.6, 8), mat(pick([0x2f9e44, 0x37b24d]))); c1.position.y = 1.5;
+    const c2 = new THREE.Mesh(new THREE.ConeGeometry(.74, 1.3, 8), mat(0x40c057)); c2.position.y = 2.2;
+    g.add(tr, c1, c2);
+  } else if (kind === "lamp") {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.07, .09, 3.2, 6), mat(0x2b2f3a)); pole.position.y = 1.6;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.17, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfff0b8 })); head.position.y = 3.2;
+    g.add(pole, head);
+  } else if (kind === "hydrant") {
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(.18, .22, .55, 8), mat(0xd83a3a)); body.position.y = .275;
+    const top = new THREE.Mesh(new THREE.SphereGeometry(.18, 8, 8), mat(0xd83a3a)); top.position.y = .55;
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .5, 6), mat(0xd83a3a)); arm.rotation.z = Math.PI / 2; arm.position.y = .4;
+    g.add(body, top, arm);
+  } else if (kind === "bench") {
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(1.5, .1, .4), mat(0x8a5a2b)); seat.position.y = .5;
+    const back = new THREE.Mesh(new THREE.BoxGeometry(1.5, .5, .08), mat(0x8a5a2b)); back.position.set(0, .75, -.16);
+    const l1 = new THREE.Mesh(new THREE.BoxGeometry(.1, .5, .4), mat(0x3a3a44)); l1.position.set(-.65, .25, 0);
+    const l2 = l1.clone(); l2.position.x = .65;
+    g.add(seat, back, l1, l2);
+  } else if (kind === "cone") {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(.32, .7, 8), mat(0xff7a30)); c.position.y = .35;
+    const stripe = new THREE.Mesh(new THREE.CylinderGeometry(.21, .27, .08, 8), mat(0xffffff)); stripe.position.y = .4;
+    g.add(c, stripe);
+  } else if (kind === "trash") {
+    const can = new THREE.Mesh(new THREE.CylinderGeometry(.28, .32, .8, 10), mat(0x4a5260, { metalness: .2, roughness: .6 })); can.position.y = .4;
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .06, 10), mat(0x363c47)); lid.position.y = .83;
+    g.add(can, lid);
+  } else if (kind === "fountain") {
+    const basin = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.2, .6, 20), mat(0xc4cad4)); basin.position.y = .3;
+    const water = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, .12, 20), mat(0x6cd0ff, { roughness: .1, metalness: .3, transparent: true, opacity: .85 })); water.position.y = .62;
+    const jet = new THREE.Mesh(new THREE.CylinderGeometry(.12, .2, 1.6, 8), mat(0xbfeaff, { transparent: true, opacity: .6 })); jet.position.y = 1.3;
+    g.add(basin, water, jet);
+  } else if (kind === "bush") {
+    const col = pick([0x2f9e44, 0x37b24d, 0x40c057]);
+    for (let i = 0; i < 4; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(rand(.42, .62), 7, 6), mat(col)); s.position.set(rand(-.4, .4), rand(.35, .6), rand(-.4, .4)); g.add(s); }
+  } else if (kind === "flowers") {
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(.85, .14, .85), mat(0x6b4a2b)); bed.position.y = .07; g.add(bed);
+    const cols = [0xff6b6b, 0xffd43b, 0xff8cc6, 0x9b8cff, 0xffffff];
+    for (let i = 0; i < 9; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.08, 6, 5), mat(pick(cols))); f.position.set(rand(-.32, .32), .22, rand(-.32, .32)); g.add(f); }
+  } else if (kind === "planter") {
+    const box = new THREE.Mesh(new THREE.BoxGeometry(.9, .5, .9), mat(0x8a6b4a)); box.position.y = .25; g.add(box);
+    const green = new THREE.Mesh(new THREE.SphereGeometry(.42, 8, 6), mat(0x37b24d)); green.position.y = .62; g.add(green);
+  } else if (kind === "kiosk") {
+    const base = new THREE.Mesh(new THREE.BoxGeometry(.9, .9, .7), mat(0x5a6270)); base.position.y = .45; g.add(base);
+    const awn = new THREE.Mesh(new THREE.BoxGeometry(1.05, .12, .85), mat(0xff5c5c)); awn.position.y = .95; g.add(awn);
+    const win = new THREE.Mesh(new THREE.BoxGeometry(.7, .4, .04), mat(0x9fd2f5, { transparent: true, opacity: .5, roughness: .1 })); win.position.set(0, .55, .37); g.add(win);
+  } else if (kind === "crate") {
+    const box = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 1.3), mat(0xb07a3a, { roughness: .9 })); box.position.y = .55; g.add(box);
+    const band = new THREE.Mesh(new THREE.BoxGeometry(1.34, .16, 1.34), mat(0x8a5a2b)); band.position.y = .55; g.add(band);
+  } else if (kind === "statue") {
+    const ped = new THREE.Mesh(new THREE.BoxGeometry(1.0, .7, 1.0), mat(0x9aa3ad)); ped.position.y = .35; g.add(ped);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(.18, .26, 1.0, 8), mat(0xc3c9d0, { metalness: .3, roughness: .5 })); body.position.y = 1.2; g.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), mat(0xc3c9d0, { metalness: .3, roughness: .5 })); head.position.y = 1.85; g.add(head);
+  } else if (kind === "busstop") {
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(2.4, .12, 1.1), mat(0x3a4150)); roof.position.y = 2.0; g.add(roof);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.5, .08), mat(0x9fd2f5, { transparent: true, opacity: .45, roughness: .1 })); back.position.set(0, 1.15, -.5); g.add(back);
+    for (const [x, z] of [[-1.1, -.45], [1.1, -.45], [-1.1, .45], [1.1, .45]]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.0, 6), mat(0x3a4150)); p.position.set(x, 1.0, z); g.add(p); }
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, .08, .35), mat(0x6a7280)); seat.position.set(0, .5, -.3); g.add(seat);
+  } else if (kind === "stadium") {
+    const wall = new THREE.Mesh(new THREE.CylinderGeometry(12, 13.5, 7, 30, 1, true), mat(0xb7c0cc, { side: THREE.DoubleSide })); wall.position.y = 3.5; g.add(wall);
+    const field = new THREE.Mesh(new THREE.CylinderGeometry(10.5, 10.5, 0.5, 30), mat(0x4a9e5a)); field.position.y = 0.3; g.add(field);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(13, 0.8, 8, 30), mat(0x8a93a0)); rim.rotation.x = Math.PI / 2; rim.position.y = 7; g.add(rim);
+  } else if (kind === "monument") {
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(11, 13.5, 5, 18), mat(0x9aa3ad)); base.position.y = 2.5; g.add(base);
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.4, 28, 6), mat(0xc3c9d0, { metalness: .3, roughness: .5 })); shaft.position.y = 19; g.add(shaft);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(2.8, 6.5, 6), mat(0xffe9a8)); tip.position.y = 36; g.add(tip);
+  } else if (kind === "boost") {
+    const up = new THREE.Mesh(new THREE.ConeGeometry(.42, .75, 4), new THREE.MeshBasicMaterial({ color: 0x00e5ff })); up.position.y = 1.15;
+    const dn = new THREE.Mesh(new THREE.ConeGeometry(.42, .75, 4), new THREE.MeshBasicMaterial({ color: 0x00e5ff })); dn.rotation.z = Math.PI; dn.position.y = .6;
+    g.add(up, dn);
+  } else { // buildings
+    const h = kind === "skyscraper" ? rand(14, 22) : kind === "building_mid" ? rand(6, 11) : rand(3, 5);
+    const w = kind === "skyscraper" ? 7 : kind === "building_mid" ? 5 : 3.4;
+    const base = pick([0x9fb3c8, 0x7d94ad, 0xb5c4d1, 0xd9d2c4, 0xc9a98f, 0x8fa6a0]);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), mat(base, { roughness: .6 })); b.position.y = h / 2;
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(w * 1.02, h * .05, w * 1.02), mat(0x474d59)); roof.position.y = h;
+    g.add(b, roof);
+  }
+  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  return g;
+}
+
+// Remove a food mesh from the scene. Dispose geometry/material ONLY for procedural
+// meshes — GLB clones share geometry/material with the prototype, so disposing those
+// would corrupt every other instance.
+function disposeFood(m) {
+  scene.remove(m.group);
+  if (m.proc) m.group.traverse((n) => { if (n.isMesh) { n.geometry && n.geometry.dispose(); const mm = Array.isArray(n.material) ? n.material : [n.material]; mm.forEach((x) => x && x.dispose()); } });
+}
+const MOVING_KINDS = new Set(["car", "van", "bus", "person"]); // driven/walked by the server each tick
+function makeFoodMesh(f, id) {
+  const m = MODELS[f.kind] || MODELS.car;
+  const glb = tryModel(f.kind, m.foot, id);
+  const group = glb || procedural(f.kind);
+  // small props don't cast shadows — keeps the shadow pass cheap with ~600 objects
+  if (!SHADOW_KINDS.has(f.kind)) group.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+  group.position.x = f.x; group.position.z = f.z;
+  group.rotation.y = (f.yaw || 0) + (m.yaw || 0);
+  scene.add(group);
+  return { group, proc: !glb, size: f.size || 1, points: f.points || 0, baseScale: group.scale.x, baseY: group.position.y, sinking: false, fall: 0, moving: MOVING_KINDS.has(f.kind) };
+}
+
+// ----------------------------------------------------------- holes (stencil)
+function makeHole(color) {
+  const mask = new THREE.Mesh(new THREE.CircleGeometry(1, 56), maskMaterial()); mask.rotation.x = -Math.PI / 2; mask.position.y = 0.08; mask.renderOrder = 1; scene.add(mask);
+  const pit = new THREE.Mesh(new THREE.CylinderGeometry(1, 0.5, PIT, 48, 1, true), new THREE.MeshBasicMaterial({ map: TEX.pit, side: THREE.BackSide })); pit.position.y = -PIT / 2; pit.renderOrder = 4; scene.add(pit);
+  const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.5, 36), new THREE.MeshBasicMaterial({ color: 0 })); bottom.rotation.x = -Math.PI / 2; bottom.position.y = -PIT + 0.1; pit.add(bottom);
+  // hole.io look: a THIN, calm skin-colored rim (the old halo/glow/xp-ring were removed — clean dark hole)
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.96, 1.05, 56), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .8, side: THREE.DoubleSide, depthTest: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.09; ring.renderOrder = 6; scene.add(ring);
+  return { mask, pit, ring, renderPos: null, lastLvl: null };
+}
+function removeHole(hv) { [hv.mask, hv.pit, hv.ring].forEach((m) => { if (m) { scene.remove(m); m.geometry && m.geometry.dispose(); m.material && m.material.dispose(); } }); }
+function flashLevel(n) { const b = $("#banner"); b.textContent = "LEVEL " + n; b.style.opacity = "1"; clearTimeout(b._t); b._t = setTimeout(() => { b.style.opacity = "0"; }, 900); }
+
+// ----------------------------------------------------------- juice: audio + particles
+function initAudio() { if (audioCtx) return; try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+function tone(freq, dur, type, vol, freqEnd) {
+  if (muted || !audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain(), n = audioCtx.currentTime;
+  o.type = type || "square"; o.frequency.setValueAtTime(freq, n);
+  if (freqEnd) o.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), n + dur);
+  g.gain.setValueAtTime(0.0001, n); g.gain.exponentialRampToValueAtTime(vol, n + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, n + dur);
+  o.connect(g); g.connect(audioCtx.destination); o.start(n); o.stop(n + dur + 0.02);
+}
+function sfxEat(size, level, combo) {
+  let base = 240 - Math.min(170, size * 17) - level * 4; // bigger objects → lower, chunkier
+  base *= 1 + Math.min(7, (combo || 1) - 1) * 0.07;       // rising pitch as the chain builds (hole.io streak ladder)
+  tone(base + rand(-18, 18), 0.08 + Math.min(0.12, size * 0.02), "square", 0.075, base * 0.6);
+  if (size > 4) tone(85, 0.15, "sawtooth", 0.06, 52); // low thud for big eats
+}
+function sfxLevel() { tone(660, 0.12, "triangle", 0.09, 990); setTimeout(() => tone(990, 0.14, "triangle", 0.08, 1330), 80); }
+function sfxOver(win) { if (win) { tone(700, 0.18, "triangle", 0.08, 1050); setTimeout(() => tone(1050, 0.22, "triangle", 0.07, 1400), 130); } else tone(200, 0.34, "sawtooth", 0.07, 110); }
+function burst(x, y, z, color, n) {
+  for (let i = 0; i < n; i++) {
+    const s = rand(0.16, 0.42), mm = new THREE.Mesh(_pgeo, new THREE.MeshBasicMaterial({ color }));
+    mm.position.set(x, y, z); mm.scale.setScalar(s);
+    const a = Math.random() * Math.PI * 2, sp = rand(2, 7);
+    scene.add(mm); particles.push({ mesh: mm, s0: s, vx: Math.cos(a) * sp, vy: rand(3, 8), vz: Math.sin(a) * sp, life: 0, ttl: rand(0.4, 0.8) });
+  }
+}
+function shockwave(x, z, color, r0) {
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.02, 30), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.65, side: THREE.DoubleSide, depthWrite: false, depthTest: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.set(x, 0.16, z); ring.scale.setScalar(r0); ring.renderOrder = 8;
+  scene.add(ring); particles.push({ mesh: ring, ring: true, life: 0, ttl: 0.5, r0 });
+}
+// hole.io-style floating "+N" score pop-up at the eaten object (throttled so mass-eating doesn't flood the DOM)
+function floatScore(wx, wy, wz, pts, size) {
+  if (!pts || performance.now() - lastFloatT < 55) return;
+  lastFloatT = performance.now();
+  _v3.set(wx, wy, wz).project(camera);
+  if (_v3.z > 1) return; // behind the camera
+  const el = document.createElement("div");
+  el.className = "vr-score"; el.textContent = "+" + pts;
+  el.style.left = ((_v3.x * 0.5 + 0.5) * innerWidth) + "px";
+  el.style.top = ((-_v3.y * 0.5 + 0.5) * innerHeight) + "px";
+  if (size > 5) el.style.fontSize = "21px"; // bigger objects → bigger pop
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 850);
+}
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]; p.life += dt; const k = p.life / p.ttl;
+    if (p.ring) { p.mesh.scale.setScalar(p.r0 * (1 + k * 1.8)); p.mesh.material.opacity = 0.65 * (1 - k); }
+    else { p.vy -= 22 * dt; p.mesh.position.x += p.vx * dt; p.mesh.position.y += p.vy * dt; p.mesh.position.z += p.vz * dt; p.mesh.scale.setScalar((p.s0 || 0.3) * Math.max(0, 1 - k)); }
+    if (p.life >= p.ttl) { scene.remove(p.mesh); if (p.ring) p.mesh.geometry.dispose(); p.mesh.material.dispose(); particles.splice(i, 1); } // sparks share _pgeo — don't dispose it
+  }
+}
+
+// ----------------------------------------------------------- connect + input
+async function play() {
+  const name = $("#name").value.trim() || "Player";
+  initAudio(); if (audioCtx && audioCtx.state === "suspended") audioCtx.resume(); // unlock audio on the click gesture
+  connState = "connecting"; $("#err").textContent = "connecting…"; leftIntentionally = false;
+  try {
+    const client = new Colyseus.Client(ENDPOINT);
+    room = await client.joinOrCreate(selectedRoom, { name, color: getSkin().rim });
+    myId = room.sessionId; connState = "joined"; $("#err").textContent = "";
+    runPeakLevel = 1;
+    if (selectedRoom === "battle") startCountdown(() => showScreen("game")); else showScreen("game");
+    room.onStateChange.once(() => { predicted.has = false; });
+    room.onMessage("match_over", (m) => showResults(m));
+    // live event feed (kills / regicide / trophies / city milestones)
+    room.onMessage("swallowed", (m) => feedMsg(`<span class="hot">${esc(m.hunter)}</span> swallowed <span class="grn">${esc(m.prey)}</span> +${m.bonus}`));
+    room.onMessage("king_slain", (m) => { feedMsg(`👑 <span class="gold">KING SLAIN</span> — ${esc(m.killer)} +${m.bonus}`); if (m.killerId === myId) { try { localStorage.setItem("vr_crowns", (+(localStorage.getItem("vr_crowns") || 0)) + 1 + ""); } catch (e) {} } });
+    room.onMessage("trophy", (m) => feedMsg(`🏆 <span class="gold">${esc(m.by)}</span> devoured the ${m.kind} +${m.bonus}`));
+    room.onMessage("city_milestone", (m) => { const b = $("#banner"); b.textContent = "CITY " + m.pct + "% DEVOURED"; b.style.opacity = "1"; clearTimeout(b._t); b._t = setTimeout(() => { b.style.opacity = "0"; }, 1300); });
+    room.onMessage("match_reset", () => {
+      $("#banner").style.opacity = "0"; predicted.has = false; // snap the player hole to its reset spot
+      resultsShown = false; runPeakLevel = 1; // new round — allow the next results + reset peak level
+      for (const [, m] of foodMeshes) disposeFood(m); // hard-rebuild the world (ids may repeat)
+      foodMeshes.clear();
+    });
+    room.onMessage("pong", () => { pingMs = Math.round(performance.now() - lastPing); });
+    // hoisted timers: clear any from a previous match so replays don't stack duplicates
+    clearInterval(pingTimer); clearInterval(inputTimer);
+    pingTimer = setInterval(() => { if (room) { lastPing = performance.now(); room.send("ping"); } }, 1000);
+    inputTimer = setInterval(() => { if (room && room.state && room.state.phase === "playing") room.send("input", input); }, 50); // don't drive during ended/frozen phase
+    // clean disconnect/error handling — otherwise a dropped socket renders stale state forever
+    room.onError((code, message) => { lastError = "ws error " + code + " " + (message || ""); connState = "error"; if (room) { cleanupRoom(); toast("Connection error — returned to menu"); showScreen("landing"); } });
+    room.onLeave((code) => { if (!room) return; cleanupRoom(); if (!leftIntentionally) toast("Disconnected from server"); showScreen("landing"); });
+  } catch (e) { connState = "failed"; lastError = String(e && e.message || e); $("#err").textContent = "could not connect: " + lastError; }
+}
+function computeInput() {
+  let dx = 0, dz = 0;
+  if (keys["w"] || keys["arrowup"]) dz -= 1; if (keys["s"] || keys["arrowdown"]) dz += 1;
+  if (keys["a"] || keys["arrowleft"]) dx -= 1; if (keys["d"] || keys["arrowright"]) dx += 1;
+  if (dx === 0 && dz === 0 && pointer.active) {
+    // aim relative to the HOLE's actual screen position (not screen center — the camera leads
+    // ahead of the hole, so center-relative aim misreads small cursor moves near the hole)
+    let hx = innerWidth / 2, hy = innerHeight / 2;
+    if (camera && predicted.has) {
+      _v3.set(predicted.x, 0, predicted.z).project(camera);
+      if (_v3.z < 1) { hx = (_v3.x * 0.5 + 0.5) * innerWidth; hy = (-_v3.y * 0.5 + 0.5) * innerHeight; }
+    }
+    const vx = pointer.x - hx, vy = pointer.y - hy;
+    if (Math.hypot(vx, vy) > 10) { dx = vx; dz = vy; } // tight deadzone → hole.io "chases the cursor" feel
+  }
+  const len = Math.hypot(dx, dz); input = len > 1e-4 ? { dx: dx / len, dz: dz / len } : { dx: 0, dz: 0 };
+}
+
+// ----------------------------------------------------------- per-frame sync
+function nearestHole(x, z) {
+  let bx = 0, bz = 0, br = START_RADIUS, bd = 1e9, found = false;
+  room.state.holes.forEach((h, hid) => {
+    const hx = (hid === myId && predicted.has) ? predicted.x : h.x;
+    const hz = (hid === myId && predicted.has) ? predicted.z : h.z;
+    const d = Math.hypot(hx - x, hz - z);
+    if (d < bd) { bd = d; bx = hx; bz = hz; br = h.radius; found = true; }
+  });
+  return found ? { x: bx, z: bz, r: br } : null;
+}
+// Organic swallow: eaten objects become tiny rigid bodies — gravity + rim-ramped
+// suction + multi-axis tumble + roll-over-the-lip + depth fade. Purely visual;
+// the server already owns the eat (the food id is gone).
+const GRAV = 34, SUCK_BASE = 5, SUCK_RAMP = 90, SPIN_DAMP = 2.2, LIP_TIP = 16;
+function syncFood(dt) {
+  // stagger mesh creation (~90/frame) so a fresh match / join / round-reset doesn't build
+  // all ~1,400 meshes in one frame → no more multi-hundred-ms freeze; objects pop in over ~0.25s.
+  let mkBudget = 90;
+  room.state.food.forEach((f, id) => { if (mkBudget > 0 && !foodMeshes.has(id)) { foodMeshes.set(id, makeFoodMesh(f, id)); mkBudget--; } });
+  const meH = room.state.holes.get(myId); // only OUR gulps get sound/shake/particles
+  const ppx = predicted.has ? predicted.x : (meH ? meH.x : 1e9), ppz = predicted.has ? predicted.z : (meH ? meH.z : 1e9);
+  const prad = meH ? meH.radius : 0, plvl = meH ? meH.level : 1;
+  for (const [id, m] of foodMeshes) {
+    // moving traffic: glide toward the server position (snap on edge-wrap)
+    if (m.moving && !m.sinking) {
+      const f2 = room.state.food.get(id);
+      if (f2) {
+        const g = m.group.position, ddx = f2.x - g.x, ddz = f2.z - g.z;
+        if (Math.abs(ddx) > 40 || Math.abs(ddz) > 40) { g.x = f2.x; g.z = f2.z; }
+        else { const kf = Math.min(1, dt * 9); g.x += ddx * kf; g.z += ddz * kf; }
+      }
+    }
+    if (!m.sinking && !room.state.food.get(id)) {
+      m.sinking = true; m.fall = 0;
+      const g = m.group.position, t = nearestHole(g.x, g.z) || { x: g.x, z: g.z, r: START_RADIUS };
+      m.hx = t.x; m.hz = t.z; m.hr = Math.max(1, t.r);
+      m.vel = { x: 0, y: 0, z: 0 };
+      const sp = 1.1 / Math.max(0.5, m.size); // slight organic wobble — the directed edge-tip dominates
+      m.spin = { x: rand(-1, 1) * sp, y: rand(-1, 1) * sp * 1.6, z: rand(-1, 1) * sp };
+      m.delay = hashPick([0, 0.03, 0.06, 0.1, 0.14], id); // clusters pour in staggered
+      if (Math.hypot(g.x - ppx, g.z - ppz) < prad * 1.3) { // the player's own eat → juice
+        if (performance.now() - lastEatT > 45) { sfxEat(m.size, plvl, meH ? meH.combo : 1); lastEatT = performance.now(); }
+        burst(g.x, 0.5, g.z, m.size > 3 ? 0x9aa3ad : 0xcdbfa0, m.size > 3 ? 9 : 4);
+        shockwave(m.hx, m.hz, meH ? (meH.color >>> 0) : 0x14f195, m.hr * 0.9);
+        shake = Math.min(0.9, shake + Math.min(0.5, 0.05 + m.size * 0.03));
+        const cmb = meH ? (meH.combo || 1) : 1;
+        floatScore(g.x, 1.2, g.z, m.points * cmb, m.size + (cmb - 1) * 1.5); // floating +N (combo-multiplied, bigger font on streaks)
+      }
+    }
+    if (m.sinking) {
+      m.fall += dt;
+      if (m.delay > 0) { m.delay -= dt; continue; } // brief hold → staggered pour
+      const g = m.group.position;
+      const dx = m.hx - g.x, dz = m.hz - g.z, dist = Math.hypot(dx, dz) || 0.001;
+      const nx = dx / dist, nz = dz / dist;                               // unit dir toward the hole centre
+      const rimF = dist / m.hr;                                           // 1 = at the rim, <1 = inside the mouth
+      const atSurface = g.y > -m.hr * 0.6;
+      // pull toward the mouth — firm so it commits to the hole, eases off once it's inside
+      const suck = SUCK_BASE + SUCK_RAMP * Math.max(0, 1.15 - rimF);
+      m.vel.x += nx * suck * dt; m.vel.z += nz * suck * dt;
+      // TIP forward over the near edge → topples in head-first (the hole.io look), strongest at the rim
+      if (atSurface && rimF < 1.3) {
+        const tip = LIP_TIP * (0.7 + Math.max(0, 1.2 - rimF));
+        m.spin.x += (-nz) * tip * dt; m.spin.z += (nx) * tip * dt;        // rotate about the rim tangent
+      }
+      // gravity: gentle while perched at the lip, full once it's tipping over / below the surface
+      const committed = rimF < 0.85 || g.y < -0.15;
+      m.vel.y -= (committed ? GRAV : GRAV * 0.3) * dt;
+      g.x += m.vel.x * dt; g.z += m.vel.z * dt; g.y += m.vel.y * dt;
+      if (g.y < -0.5) { const f = Math.min(1, dt * 6); g.x += (m.hx - g.x) * f; g.z += (m.hz - g.z) * f; } // funnel down the throat
+      m.spin.x -= m.spin.x * SPIN_DAMP * dt; m.spin.y -= m.spin.y * SPIN_DAMP * dt; m.spin.z -= m.spin.z * SPIN_DAMP * dt; // damp tumble
+      _spinE.set(m.spin.x * dt, m.spin.y * dt, m.spin.z * dt); _spinQ.setFromEuler(_spinE);
+      m.group.quaternion.premultiply(_spinQ);
+      let depth = Math.max(0, Math.min(1, -g.y / PIT)); depth = depth * depth * (3 - 2 * depth); // hold size at the surface, then shrink down the shaft
+      m.group.scale.setScalar(m.baseScale * (1 - 0.92 * depth));
+      if (g.y < -PIT * 0.9 || m.fall > 3.5) { disposeFood(m); foodMeshes.delete(id); }
+    }
+  }
+}
+function syncHoles(dt) {
+  const meHole = room.state.holes.get(myId), meR = meHole ? meHole.radius : 0;
+  room.state.holes.forEach((h, id) => {
+    let hv = holeVis.get(id); if (!hv) { hv = makeHole(h.color || 0x14f195); holeVis.set(id, hv); }
+    if (h.dead) { // eaten / eliminated → hide it (it used to keep rendering in place)
+      if (!hv.dead) { hv.dead = true; shockwave(h.x, h.z, (h.color >>> 0) || 0x9945ff, Math.max(1.2, h.radius * 0.8)); } // collapse pop, once
+      [hv.mask, hv.pit, hv.ring].forEach((m) => (m.visible = false));
+      hv.renderPos = null; // reset interp so a classic respawn snaps to its new spot instead of sliding across the map
+      return;
+    }
+    if (hv.dead) { hv.dead = false; [hv.mask, hv.pit, hv.ring].forEach((m) => (m.visible = true)); } // respawned → show again
+    let x, z;
+    if (id === myId && predicted.has) { x = predicted.x; z = predicted.z; }
+    else {
+      if (!hv.renderPos) hv.renderPos = { x: h.x, z: h.z };
+      hv.renderPos.x += (h.x - hv.renderPos.x) * Math.min(1, dt * 12);
+      hv.renderPos.z += (h.z - hv.renderPos.z) * Math.min(1, dt * 12);
+      x = hv.renderPos.x; z = hv.renderPos.z;
+    }
+    // smooth the rendered radius toward the authoritative one so a level-up GROWS instead of popping (hole.io feel)
+    if (hv.rr == null || h.radius < hv.rr * 0.7) hv.rr = h.radius; // init, or snap on respawn/reset (don't deflate)
+    hv.rr += (h.radius - hv.rr) * Math.min(1, dt * 5);
+    const r = hv.rr;
+    const idle = (id === myId) ? (1 + 0.012 * Math.sin(T * 2.4)) : 1; // living pulse (player only)
+    const rr = r * idle;
+    hv.mask.position.set(x, 0.08, z); hv.mask.scale.set(rr, rr, 1);
+    hv.ring.position.set(x, 0.09, z); hv.ring.scale.set(rr, rr, 1);
+    hv.pit.position.set(x, -PIT / 2, z); hv.pit.scale.set(rr, 1, rr); hv.pit.rotation.y += dt * 0.12; // barely-perceptible wall drift (hole.io calm)
+    hv.ring.material.opacity = 0.85 + 0.12 * Math.sin(T * 4);
+    // rim tint: 👑 the KING glows gold (bounty target); a rival that can eat you shows RED
+    const tint = h.isKing ? "king" : (id !== myId && meR > 0 && h.radius > meR * 1.05) ? "danger" : "base";
+    if (hv.tinted !== tint) {
+      hv.tinted = tint;
+      hv.ring.material.color.setHex(tint === "king" ? 0xffd166 : tint === "danger" ? 0xff4040 : ((h.color >>> 0) || 0x14f195));
+    }
+    // level-up flash (player only)
+    if (id === myId) { if (hv.lastLvl == null) hv.lastLvl = h.level; if (h.level > hv.lastLvl) { hv.lastLvl = h.level; flashLevel(h.level); sfxLevel(); shake = Math.min(1, shake + 0.45); } }
+  });
+  for (const [id, hv] of holeVis) { if (!room.state.holes.get(id)) { removeHole(hv); holeVis.delete(id); } }
+}
+
+// ----------------------------------------------------------- render loop
+let last = performance.now(), fpsN = 0, fpsT = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  try {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+    fpsN++; fpsT += dt; if (fpsT >= 0.5) { fps = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
+    computeInput();
+    if (room && room.state && room.state.holes) {
+      const me = room.state.holes.get(myId);
+      if (me) {
+        if (!predicted.has) { predicted.x = me.x; predicted.z = me.z; predicted.has = true; predVel.vx = 0; predVel.vz = 0; }
+        const sp = speedFor(me.radius) * (me.boosting ? BOOST_MULT : 1);
+        if (room.state.phase === "playing") { // momentum-eased prediction (mirrors server moveHoles exactly)
+          const k = Math.min(1, MOVE_ACCEL * dt);
+          predVel.vx += (input.dx * sp - predVel.vx) * k;
+          predVel.vz += (input.dz * sp - predVel.vz) * k;
+          predicted.x += predVel.vx * dt; predicted.z += predVel.vz * dt;
+        }
+        predicted.x += (me.x - predicted.x) * Math.min(1, dt * 6); predicted.z += (me.z - predicted.z) * Math.min(1, dt * 6);
+      }
+      syncFood(dt); syncHoles(dt);
+      // battle: shrinking safe-zone ring + eliminated state
+      if (zoneRing) {
+        if (room.state.mode === "battle") { const zr = room.state.zoneR; zoneRing.visible = true; zoneRing.scale.set(zr, zr, 1); zoneRing.material.opacity = 0.4 + 0.2 * Math.abs(Math.sin(T * 3)); }
+        else zoneRing.visible = false;
+      }
+      // elimination is shown via the #elim overlay (see updateHud extras)
+      const px = me ? predicted.x : 0, pz = me ? predicted.z : 0, pr = me ? me.radius : START_RADIUS;
+      // hole.io camera: steeper, hole-centered, continuous zoom keyed off the SMOOTHED radius
+      // (raw radius would lurch at each discrete level-up); zoom-out slightly faster than zoom-in.
+      const myHv = holeVis.get(myId), smoothR = myHv && myHv.rr != null ? myHv.rr : pr;
+      const targetH = Math.min(165, Math.max(34, 24 + smoothR * 5.4));
+      camHeight += (targetH - camHeight) * Math.min(1, dt * (targetH > camHeight ? 3.0 : 2.2));
+      shake = Math.max(0, shake - dt * 2.5);
+      const ox = (Math.random() - 0.5) * shake * camHeight * 0.06, oz = (Math.random() - 0.5) * shake * camHeight * 0.06;
+      const lead = 1.0 * pr; // gentle lead — keep the hole essentially centered (hole.io)
+      const tx = px + input.dx * lead + ox, tz = pz + input.dz * lead;
+      if (camFollow.x === undefined) { camFollow.x = tx; camFollow.z = tz; }
+      const cf = Math.min(1, dt * 5); camFollow.x += (tx - camFollow.x) * cf; camFollow.z += (tz - camFollow.z) * cf;
+      camera.position.set(camFollow.x, camHeight, camFollow.z + camHeight * 0.40 + oz); camera.lookAt(px, 0, pz); // 0.40 z-offset ≈ 68° pitch (steeper, hole.io-like)
+      sun.position.set(px + 45, 90, pz + 30); sun.target.position.set(px, 0, pz); sun.target.updateMatrixWorld();
+      updateParticles(dt);
+      updateHud(me);
+      drawMinimap(me, dt);
+    }
+    if (renderer) renderer.render(scene, camera);
+  } catch (e) { lastError = String(e && e.message || e); }
+  drawDebug();
+}
+
+function updateHud(me) {
+  if (me) { $("#lvl").textContent = me.level; $("#score").textContent = Math.round(me.score); }
+  const t = Math.max(0, Math.floor(room.state.timeLeft));
+  $("#time").textContent = Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0");
+  // FINAL FRENZY — last stretch of classic: red timer + one-time banner/sting (per-frame, one-shot)
+  const inFinale = room.state.mode === "classic" && room.state.phase === "playing" && t <= FINALE_SEC && t > 0;
+  $("#time").style.color = inFinale ? "#ff4040" : "";
+  if (inFinale && !finaleShown) {
+    finaleShown = true;
+    const b = $("#banner"); b.textContent = "FINAL FRENZY — x2 SCORE — NO RESPAWNS"; b.style.opacity = "1";
+    clearTimeout(b._t); b._t = setTimeout(() => { b.style.opacity = "0"; }, 2200);
+    tone(180, 0.4, "sawtooth", 0.09, 70); setTimeout(() => tone(240, 0.35, "sawtooth", 0.08, 90), 220); // sting
+    shake = Math.min(1, shake + 0.5);
+  }
+  if (!inFinale && t > FINALE_SEC) finaleShown = false; // re-arm for the next round
+  // Leaderboard + rank + city meter: throttle to ~6 Hz + diff-guard (was a full sort + innerHTML rebuild EVERY frame)
+  const nowMs = performance.now();
+  if (nowMs >= hudNext) {
+    hudNext = nowMs + 160;
+    const arr = []; room.state.holes.forEach((h, id) => arr.push({ name: h.name, score: h.score, me: id === myId, color: h.color, radius: h.radius }));
+    arr.sort((a, b) => b.score - a.score);
+    $("#rank").textContent = "#" + (arr.findIndex((r) => r.me) + 1) + " / " + arr.length; // hole.io's "am I winning?" glance
+    const cityPct = room.state.cityTotal > 0 ? Math.floor((room.state.cityEaten / room.state.cityTotal) * 100) : 0;
+    $("#city").textContent = cityPct + "%";
+    const meR = me ? me.radius : 0;
+    const html = '<div class="lbh">Leaderboard</div>' + arr.slice(0, 6).map((r, i) => {
+      const threat = !r.me && meR > 0 && r.radius > meR * 1.05;
+      const col = r.me ? "#14f195" : (threat ? "#ff5c5c" : "#" + ((r.color >>> 0).toString(16).padStart(6, "0")));
+      return `<div class="row ${r.me ? "me" : ""}"><span class="rk">${i + 1}</span><span class="dot" style="background:${col}"></span><span class="nm">${esc(r.name)}</span>${threat ? '<span class="th">▲</span>' : ""}<span class="ms">${Math.round(r.score)}</span></div>`;
+    }).join("");
+    if (html !== lastBoardHtml) { lastBoardHtml = html; $("#board").innerHTML = html; }
+  }
+
+  // --- HUD extras ---
+  if (me && me.level > runPeakLevel) runPeakLevel = me.level;
+  // chain-eat combo pill (x2..x8) — pops on every increase, hides when the chain lapses
+  const cp = $("#comboPill"), comboNow = me ? (me.combo || 1) : 1;
+  if (comboNow > 1) {
+    cp.textContent = "x" + comboNow;
+    cp.classList.add("show");
+    if (comboNow > lastCombo) { cp.classList.remove("pop"); void cp.offsetWidth; cp.classList.add("pop"); setTimeout(() => cp.classList.remove("pop"), 130); }
+  } else cp.classList.remove("show");
+  lastCombo = comboNow;
+  // speed-boost pill with a draining timer bar
+  const bp = $("#boostPill");
+  if (me && me.boosting) {
+    if (!wasBoosting) boostShownAt = T;
+    wasBoosting = true;
+    const frac = Math.max(0, 1 - (T - boostShownAt) / BOOST_DUR);
+    $("#boostBar").style.width = (frac * 100) + "%";
+    bp.classList.add("show");
+  } else { wasBoosting = false; bp.classList.remove("show"); }
+  // battle: zone-closing warning pill + red edge glow
+  const shrinking = room.state.mode === "battle" && room.state.zoneR < (WORLD / 2) * 0.999;
+  $("#zonePill").classList.toggle("show", shrinking);
+  $("#zoneGlow").classList.toggle("show", shrinking);
+  if (shrinking) $("#zoneTxt").textContent = "ZONE CLOSING · " + Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0");
+  // eliminated overlay (spectating)
+  const el = $("#elim");
+  if (me && me.dead) { if (!el.classList.contains("show")) $("#elimSub").textContent = "No respawns · spectating " + (arr[0] ? arr[0].name : "—"); el.classList.add("show"); }
+  else el.classList.remove("show");
+}
+let miniCtx = null, miniT = 0;
+function drawMinimap(me, dt) {
+  miniT += dt; if (miniT < 0.08) return; miniT = 0; // ~12 fps is plenty
+  const c = document.getElementById("mini"); if (!c || !room || !room.state) return;
+  if (!miniCtx) miniCtx = c.getContext("2d");
+  const x = miniCtx, W = c.width, H = c.height, s = W / WORLD;
+  x.clearRect(0, 0, W, H);
+  const toM = (wx, wz) => [W / 2 + wx * s, H / 2 + wz * s];
+  // big landmarks — grey dots (the "where are the trophies" layer)
+  x.fillStyle = "rgba(185,195,210,.55)";
+  room.state.food.forEach((f) => { if (f.size >= 9) { const p = toM(f.x, f.z); x.fillRect(p[0] - 1.5, p[1] - 1.5, 3, 3); } });
+  // rivals — their colour, or red if they can eat you
+  room.state.holes.forEach((h, id) => {
+    if (id === myId) return;
+    const p = toM(h.x, h.z), big = me && h.radius > me.radius * 1.05;
+    x.fillStyle = big ? "#ff5c5c" : "#" + ((h.color >>> 0).toString(16).padStart(6, "0"));
+    x.beginPath(); x.arc(p[0], p[1], Math.max(2, h.radius * s * 1.6), 0, 7); x.fill();
+  });
+  // you — white dot with a green rim
+  if (me) {
+    const p = toM(predicted.has ? predicted.x : me.x, predicted.has ? predicted.z : me.z);
+    x.fillStyle = "#fff"; x.beginPath(); x.arc(p[0], p[1], Math.max(2.5, me.radius * s * 1.6), 0, 7); x.fill();
+    x.lineWidth = 1.6; x.strokeStyle = "#14f195"; x.stroke();
+  }
+}
+function drawDebug() {
+  const el = $("#dbg"); if (!el) return;
+  const s = !DEBUG
+    ? (lastError ? `<span class="e">${esc(lastError)}</span>` : "") // prod: only surface hard errors, no fps/conn spam
+    : `conn:${connState} · holes:${room && room.state && room.state.holes ? room.state.holes.size : 0} food:${room && room.state && room.state.food ? room.state.food.size : 0} meshes:${foodMeshes.size} · assets:${assetsReady ? "real" : "loading"} · ${fps}fps` + (lastError ? ` · <span class="e">ERR: ${esc(lastError)}</span>` : "");
+  if (s !== el._last) { el._last = s; el.innerHTML = s; } // diff-guard: don't re-parse identical markup every frame
+}
+
+// ----------------------------------------------------------- boot / UI router
+// Screen router: menu overlays (.scr) sit above the live WebGL canvas; "game"
+// simply hides them all, revealing the HUD that renders underneath.
+function showScreen(name) {
+  document.querySelectorAll(".scr").forEach((s) => s.classList.remove("active"));
+  const inGame = name === "game";
+  document.body.classList.toggle("in-game", inGame);
+  if (!inGame) { const el = document.getElementById("scr-" + name); if (el) el.classList.add("active"); }
+  if (inGame) { const h = $("#hudHint"); if (h) { h.classList.add("show"); clearTimeout(h._t); h._t = setTimeout(() => h.classList.remove("show"), 4000); } }
+}
+// live event feed — stacked lines top-right, capped, self-expiring
+function feedMsg(html) {
+  const feed = document.getElementById("feed"); if (!feed) return;
+  const el = document.createElement("div");
+  el.className = "feedline"; el.innerHTML = html;
+  feed.appendChild(el);
+  while (feed.children.length > 4) feed.removeChild(feed.firstChild);
+  setTimeout(() => el.remove(), 3400);
+}
+let toastT = null;
+function toast(msg) {
+  let t = document.getElementById("vr-toast");
+  if (!t) { t = document.createElement("div"); t.id = "vr-toast"; t.className = "vr-toast"; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+// ---- landing: modes (Classic/Battle free · Staked coming-soon) ----
+const MODES = [
+  { id: "arena",  title: "Classic", desc: "5-minute free-for-all. Highest mass wins.", badge: "FREE", bc: "#14f195" },
+  { id: "battle", title: "Battle",  desc: "Last hole standing. The zone closes in.",  badge: "LAST STANDING", bc: "#ff5c5c" },
+  { id: "staked", title: "Staked",  desc: "Ante up SOL. Winner takes the pot.",       badge: "SOON", bc: "#c4a3ff" },
+];
+function renderModes() {
+  const g = $("#modegrid"); if (!g) return;
+  g.innerHTML = MODES.map((m) => {
+    const active = m.id !== "staked" && selectedRoom === m.id;
+    const sel = active ? `background:linear-gradient(180deg,${m.bc}1f,rgba(255,255,255,.02));border-color:${m.bc}aa;box-shadow:0 16px 44px ${m.bc}22` : "";
+    return `<button class="modecard" data-mode="${m.id}" style="${sel}">
+      <div class="top"><span class="ring" style="background:radial-gradient(circle at 50% 40%,#05060a 50%,${m.bc});box-shadow:0 0 0 3px ${m.bc}44,0 0 22px ${m.bc}66"></span><span class="mb" style="background:${m.bc}22;color:${m.bc};border:1px solid ${m.bc}55">${m.badge}</span></div>
+      <div class="mt">${m.title}</div><div class="md">${m.desc}</div></button>`;
+  }).join("");
+  g.querySelectorAll(".modecard").forEach((b) => b.addEventListener("click", () => {
+    const id = b.dataset.mode;
+    if (id === "staked") { toast("Staked matches — coming soon. Play free for now."); return; }
+    selectedRoom = id; renderModes();
+  }));
+}
+function renderMeta() {
+  const el = $("#landing-meta"); if (!el) return;
+  try {
+    const best = +(localStorage.getItem("vr_best") || 0), g = +(localStorage.getItem("vr_games") || 0), w = +(localStorage.getItem("vr_wins") || 0);
+    el.innerHTML = g > 0
+      ? `<span>BEST MASS <b>${best.toLocaleString()}</b></span><span>GAMES <b>${g}</b></span><span>WINS <b class="g">${w}</b></span>`
+      : `<span style="color:#8a90a2">First run — no stats yet. Time to make some noise.</span>`;
+  } catch (e) {}
+}
+function startGame() { if (selectedRoom === "staked") { toast("Staked — coming soon"); return; } play(); }
+
+renderModes(); renderMeta();
+["play", "play2", "play3"].forEach((id) => { const b = document.getElementById(id); if (b) b.addEventListener("click", startGame); });
+{ const l = $("#howto-link"); if (l) l.addEventListener("click", () => showScreen("howto")); }
+$("#name").addEventListener("keydown", (e) => { if (e.key === "Enter") startGame(); });
+
+// ---- skins: 3 starters + 5 ACHIEVEMENT unlocks (earned by playing — no fake economy) ----
+const LSn = (k) => +(localStorage.getItem(k) || 0);
+const unlockedSet = () => { try { return new Set(JSON.parse(localStorage.getItem("vr_unlocks") || "[]")); } catch (e) { return new Set(); } };
+const SKINS = [
+  { id: "nebula", name: "Nebula", bg: "linear-gradient(135deg,#9945ff,#14f195)", rim: 0x9945ff },
+  { id: "ink", name: "Ink", bg: "radial-gradient(circle at 38% 32%,#2a3350,#0d1220)", rim: 0x4a5578 },
+  { id: "ember", name: "Ember", bg: "linear-gradient(135deg,#ff5c5c 10%,#ffd23b)", rim: 0xff7a45 },
+  { id: "frost", name: "Frost", bg: "linear-gradient(135deg,#3ba9ff,#e2f4ff)", rim: 0x3ba9ff,
+    unlock: { label: "Win 3 matches", prog: () => Math.min(3, LSn("vr_wins")) + " / 3", done: () => LSn("vr_wins") >= 3 } },
+  { id: "toxic", name: "Toxic", bg: "linear-gradient(135deg,#14f195,#9945ff)", rim: 0x14f195,
+    unlock: { label: "Hit an x8 combo", prog: () => "best x" + Math.max(1, LSn("vr_bestcombo")), done: () => LSn("vr_bestcombo") >= 8 } },
+  { id: "void", name: "Void Prime", bg: "conic-gradient(from 210deg,#9945ff,#14f195,#ff5c5c,#9945ff)", rim: 0xc4a3ff,
+    unlock: { label: "Win by devouring 90% of the city", prog: () => LSn("vr_devoured") ? "done" : "not yet", done: () => LSn("vr_devoured") >= 1 } },
+  { id: "solar", name: "Solar", bg: "linear-gradient(135deg,#e79a44,#fbe6c2)", rim: 0xe79a44,
+    unlock: { label: "Swallow the Monument", prog: () => LSn("vr_monument") ? "done" : "not yet", done: () => LSn("vr_monument") >= 1 } },
+  { id: "grid", name: "Grid", bg: "repeating-linear-gradient(45deg,#0d1220 0 7px,#1c2540 7px 14px)", rim: 0x2a3350,
+    unlock: { label: "Swallow 3 rivals in one match", prog: () => "best " + LSn("vr_maxkills") + " / 3", done: () => LSn("vr_maxkills") >= 3 } },
+];
+const skinUnlocked = (s) => !s.unlock || unlockedSet().has(s.id);
+function getSkin() { const id = localStorage.getItem("vr_skin") || "nebula"; const s = SKINS.find((x) => x.id === id) || SKINS[0]; return skinUnlocked(s) ? s : SKINS[0]; }
+function updateSkinPreview() { const s = getSkin(); const f = $("#skin-prev-fill"); if (f) f.style.background = s.bg; const n = $("#skin-prev-name"); if (n) n.textContent = s.name; const st = $("#skin-prev-state"); if (st) st.textContent = "Equipped"; }
+function equipSkin(id) {
+  const s = SKINS.find((x) => x.id === id); if (!s) return;
+  if (!skinUnlocked(s)) { toast("🔒 " + s.name + " — " + s.unlock.label + " (" + s.unlock.prog() + ")"); return; }
+  localStorage.setItem("vr_skin", id); renderSkins(); updateSkinPreview(); toast(s.name + " equipped");
+}
+// after a match: fold the run's stats into lifetime records and grant any earned skins
+function checkUnlocks(meH, won, reason) {
+  try {
+    if (meH) {
+      if ((meH.bestCombo || 1) > LSn("vr_bestcombo")) localStorage.setItem("vr_bestcombo", meH.bestCombo);
+      if ((meH.kills || 0) > LSn("vr_maxkills")) localStorage.setItem("vr_maxkills", meH.kills);
+      if ((meH.bigEat || 0) >= 19.5) localStorage.setItem("vr_monument", "1");
+    }
+    if (won && reason === "devoured") localStorage.setItem("vr_devoured", "1");
+    const have = unlockedSet(); const fresh = [];
+    SKINS.forEach((s) => { if (s.unlock && !have.has(s.id) && s.unlock.done()) { have.add(s.id); fresh.push(s.name); } });
+    if (fresh.length) localStorage.setItem("vr_unlocks", JSON.stringify([...have]));
+    return fresh;
+  } catch (e) { return []; }
+}
+function renderSkins() {
+  const g = $("#skins-grid"); if (!g) return; const eqId = getSkin().id;
+  const nOwned = SKINS.filter(skinUnlocked).length;
+  const cnt = $("#skins-count"); if (cnt) cnt.textContent = nOwned + " / " + SKINS.length + " unlocked";
+  g.innerHTML = SKINS.map((k) => {
+    const equipped = k.id === eqId, locked = !skinUnlocked(k);
+    const label = equipped ? "EQUIPPED" : locked ? k.unlock.label + " · " + k.unlock.prog() : "Equip";
+    const col = equipped ? "#14f195" : locked ? "#c4a3ff" : "#c6cad6";
+    return `<div class="stile${equipped ? " eq" : ""}" data-skin="${k.id}"><div class="sw${locked ? " lk" : ""}" style="background:${k.bg}">${locked ? '<span class="lock">🔒</span>' : ""}</div><div class="snm">${k.name}</div><div class="sst" style="color:${col}">${label}</div></div>`;
+  }).join("");
+  g.querySelectorAll(".stile").forEach((t) => t.addEventListener("click", () => equipSkin(t.dataset.skin)));
+}
+// ---- how-to food chain ----
+function renderTiers() {
+  const el = $("#howto-tiers"); if (!el) return;
+  const names = ["Person", "Car", "Tree", "Bus", "House", "Factory", "Tower", "Stadium", "Monument"];
+  el.innerHTML = names.map((name, i) => { const t = i / (names.length - 1), hue = Math.round(150 - t * 150); return `<div class="tier"><div style="width:26px;height:${24 + i * 12}px;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,hsl(${hue} 72% 62%),hsl(${hue} 66% 42%));box-shadow:0 5px 14px hsl(${hue} 66% 45% / .4)"></div><div class="tn">${name}</div></div>`; }).join("");
+}
+// ---- wallet & stake (simulated preview — real SOL staking is coming soon) ----
+let walletTimer = null;
+function renderWallet(step) {
+  const b = $("#wallet-body"); if (!b) return; clearTimeout(walletTimer);
+  const preview = `<div style="font-family:var(--mono);font-size:10px;color:#8a90a2;text-align:center;margin-top:14px">Preview · staking coming soon (simulated)</div>`;
+  if (step === "connect") {
+    b.innerHTML = `<div style="text-align:center"><div style="width:56px;height:56px;margin:2px auto 14px;border-radius:16px;background:linear-gradient(135deg,#9945ff,#14f195)"></div><div style="font-size:22px;font-weight:700;color:#fff">Connect wallet</div><div style="font-size:13px;color:#9ba1b5;margin:7px 0 20px;line-height:1.4">Play staked matches, hold your winnings, own your skins. We never see your keys.</div><button id="w-next" class="btnfull">Connect with Phantom</button>${preview}</div>`;
+    $("#w-next").onclick = () => renderWallet("signing");
+  } else if (step === "signing") {
+    b.innerHTML = `<div style="text-align:center;padding:8px 0"><div style="width:46px;height:46px;margin:6px auto 16px;border-radius:50%;border:3px solid rgba(153,69,255,.25);border-top-color:#9945ff;animation:vr-spin 1s linear infinite"></div><div style="font-size:20px;font-weight:700;color:#fff">Sign in with Solana</div><div style="font-size:13px;color:#9ba1b5;margin:8px 0 4px;line-height:1.4">Approve the signature request to prove you own this wallet.</div><div style="font-family:var(--mono);font-size:11px;color:#8a90a2;margin-top:14px;padding:9px;background:rgba(255,255,255,.04);border-radius:9px">no gas · no transaction · just a signature</div></div>`;
+    walletTimer = setTimeout(() => renderWallet("connected"), 1400);
+  } else if (step === "connected") {
+    b.innerHTML = `<div style="text-align:center"><div style="width:52px;height:52px;margin:2px auto 14px;border-radius:50%;background:rgba(20,241,149,.16);border:1px solid rgba(20,241,149,.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#14f195">✓</div><div style="font-size:22px;font-weight:700;color:#fff">Wallet connected</div><div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;margin:16px 0"><div style="display:flex;align-items:center;gap:9px"><span style="width:10px;height:10px;border-radius:50%;background:#14f195"></span><span style="font-family:var(--mono);font-size:13px;color:#fff">9xQe…4f2a</span></div><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#7ff2c4">1.20 ◎</span></div><button id="w-next" class="btnfull">Continue</button></div>`;
+    $("#w-next").onclick = () => renderWallet("stake");
+  } else if (step === "stake") {
+    b.innerHTML = `<div><div style="font-size:20px;font-weight:700;color:#fff;text-align:center;margin-bottom:4px">Confirm your stake</div><div style="font-size:13px;color:#9ba1b5;text-align:center;margin-bottom:18px">Battle · last hole standing</div><div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:4px 14px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)"><span style="font-size:13px;color:#9ba1b5">Entry stake</span><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#fff">0.05 ◎</span></div><div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)"><span style="font-size:13px;color:#9ba1b5">Players</span><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#fff">5</span></div><div style="display:flex;justify-content:space-between;padding:11px 0"><span style="font-size:13px;color:#c4a3ff">Winner takes</span><span style="font-family:var(--mono);font-size:16px;font-weight:700;color:#14f195">0.25 ◎</span></div></div><div style="display:flex;gap:9px"><button id="w-cancel" class="btnghost" style="flex:1">Decline</button><button id="w-next" class="btnfull" style="flex:2">Approve 0.05 ◎</button></div></div>`;
+    $("#w-next").onclick = () => renderWallet("pending"); $("#w-cancel").onclick = () => renderWallet("error");
+  } else if (step === "pending") {
+    b.innerHTML = `<div style="text-align:center;padding:8px 0"><div style="width:46px;height:46px;margin:6px auto 16px;border-radius:50%;border:3px solid rgba(20,241,149,.25);border-top-color:#14f195;animation:vr-spin 1s linear infinite"></div><div style="font-size:20px;font-weight:700;color:#fff">Confirming on Solana…</div><div style="font-size:13px;color:#9ba1b5;margin-top:8px">Your stake is being locked into the match escrow.</div><div style="font-family:var(--mono);font-size:11px;color:#8a90a2;margin-top:14px;padding:9px;background:rgba(255,255,255,.04);border-radius:9px">tx 5Kd9…a1c · ~2s</div></div>`;
+    walletTimer = setTimeout(() => renderWallet("confirmed"), 1600);
+  } else if (step === "confirmed") {
+    b.innerHTML = `<div style="text-align:center"><div style="width:52px;height:52px;margin:2px auto 14px;border-radius:50%;background:rgba(20,241,149,.16);border:1px solid rgba(20,241,149,.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#14f195">✓</div><div style="font-size:22px;font-weight:700;color:#fff">You're in</div><div style="font-size:13px;color:#9ba1b5;margin:7px 0 16px">Staked 0.05 ◎ · pot is now <span style="color:#14f195;font-weight:600">0.25 ◎</span></div><button id="w-next" class="btnfull">Enter lobby</button></div>`;
+    $("#w-next").onclick = () => enterLobby();
+  } else if (step === "error") {
+    b.innerHTML = `<div style="text-align:center"><div style="width:52px;height:52px;margin:2px auto 14px;border-radius:50%;background:rgba(255,64,64,.14);border:1px solid rgba(255,64,64,.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#ff5c5c">!</div><div style="font-size:21px;font-weight:700;color:#fff">Request rejected</div><div style="font-size:13px;color:#9ba1b5;margin:7px 0 16px;line-height:1.4">You declined in the wallet. Nothing was charged.</div><button id="w-next" class="btnghost" style="width:100%">Try again</button></div>`;
+    $("#w-next").onclick = () => renderWallet("stake");
+  }
+}
+// ---- lobby (preview) ----
+let lobbyTimer = null;
+function renderLobbyPlayers() {
+  const el = $("#lobby-players"); if (!el) return;
+  const ps = [{ n: "You", c: "#14f195", s: true, you: true }, { n: "Nyx", c: "#9945ff", s: true }, { n: "Maw", c: "#ff8c3b", s: true }, { n: "Rift", c: "#ffd23b", s: false }, { n: "Hex", c: "#ff5ca8", s: false }];
+  el.innerHTML = ps.map((p) => `<div style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;margin-bottom:6px;background:${p.you ? "rgba(20,241,149,.1)" : "rgba(255,255,255,.04)"};border:1px solid ${p.you ? "rgba(20,241,149,.35)" : "rgba(255,255,255,.07)"}"><span style="width:12px;height:12px;border-radius:50%;flex:none;background:${p.c}"></span><span style="font-family:var(--disp);font-size:15px;font-weight:${p.you ? 700 : 500};color:#fff">${p.n}</span>${p.s ? '<span style="margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:700;color:#7ff2c4">staked ✓</span>' : '<span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:#8a90a2;animation:vr-pulse 1.4s infinite">waiting…</span>'}</div>`).join("");
+}
+function enterLobby() {
+  renderLobbyPlayers(); showScreen("lobby"); clearTimeout(lobbyTimer);
+  lobbyTimer = setTimeout(() => {
+    const st = $("#lobby-status"); if (st && st.firstChild) st.firstChild.textContent = "All in — starting… ";
+    const c = $("#lobby-count"); if (c) c.textContent = "5 / 5";
+    const bar = $("#lobby-bar"); if (bar) bar.style.width = "100%";
+    const pot = $("#lobby-pot"); if (pot) pot.textContent = "0.25 ◎";
+    lobbyTimer = setTimeout(() => { selectedRoom = "battle"; startCountdown(() => play()); }, 1500);
+  }, 2400);
+}
+// ---- countdown ----
+let cdTimer = null;
+function startCountdown(next) {
+  showScreen("countdown"); let n = 3; const num = $("#cd-num");
+  const tick = () => {
+    if (n <= 0) { if (next) next(); return; }
+    if (num) { num.textContent = n; num.classList.remove("pop"); void num.offsetWidth; num.classList.add("pop"); }
+    n--; cdTimer = setTimeout(tick, 1000);
+  };
+  clearTimeout(cdTimer); tick();
+}
+// ---- results / scoreboard ----
+function showResults(m) {
+  if (resultsShown) return; resultsShown = true; // guard: never double-count games/wins on a repeat match_over
+  const meH = room && room.state ? room.state.holes.get(myId) : null;
+  const won = !!(m && m.winnerId ? m.winnerId === myId : (meH && m && m.winner === meH.name)); // by id — names aren't unique
+  sfxOver(won);
+  const arr = []; room.state.holes.forEach((h, id) => arr.push({ name: h.name, score: Math.round(h.score), color: h.color, me: id === myId }));
+  arr.sort((a, b) => b.score - a.score);
+  const myRank = Math.max(1, arr.findIndex((x) => x.me) + 1);
+  const elim = !!(meH && meH.dead && !won);
+  const runMass = meH ? Math.round(meH.score) : 0;
+  let prevBest = 0, games = 0, wins = 0;
+  try { prevBest = +(localStorage.getItem("vr_best") || 0); games = +(localStorage.getItem("vr_games") || 0); wins = +(localStorage.getItem("vr_wins") || 0); } catch (e) {}
+  const newHigh = runMass > prevBest; const best = Math.max(prevBest, runMass); games += 1; if (won) wins += 1;
+  try { localStorage.setItem("vr_best", best); localStorage.setItem("vr_games", games); localStorage.setItem("vr_wins", wins); } catch (e) {}
+  const devoured = m && m.reason === "devoured";
+  const title = devoured && won ? "CITY DEVOURED" : won ? "You win!" : elim ? "Eliminated" : "You placed #" + myRank;
+  const color = devoured && won ? "#f0d48a" : won ? "#14f195" : elim ? "#ff4040" : "#c4a3ff";
+  const sub = devoured ? "The whole city is gone. Nothing survived." : won ? "Biggest void on the board." : elim ? "The zone closed in. No respawns." : "Strong run — keep climbing.";
+  // run grade S/A/B/C — mastery chase (place + mass + combo + kills + big-eat)
+  const placePts = won ? 40 : myRank === 2 ? 28 : myRank === 3 ? 20 : 10;
+  const gp = placePts + Math.min(25, runMass / 400) + Math.min(16, (meH ? meH.bestCombo : 1) * 2) + Math.min(18, (meH ? meH.kills : 0) * 6) + ((meH && meH.bigEat >= 16) ? 8 : 0);
+  const grade = gp >= 85 ? "S" : gp >= 65 ? "A" : gp >= 45 ? "B" : "C";
+  const gradeCol = { S: "#f0d48a", A: "#14f195", B: "#c4a3ff", C: "#8a90a2" }[grade];
+  try { const g0 = JSON.parse(localStorage.getItem("vr_grades") || "{}"); g0[grade] = (g0[grade] || 0) + 1; localStorage.setItem("vr_grades", JSON.stringify(g0)); } catch (e) {}
+  // achievements: fold run stats into records, grant any earned skins
+  const freshSkins = checkUnlocks(meH, won, m && m.reason);
+  // best city % this run (personal exploration record)
+  const cityPct = room.state.cityTotal > 0 ? Math.round(((meH ? meH.structures : 0) / room.state.cityTotal) * 100) : 0;
+  try { if (cityPct > LSn("vr_bestCityPct")) localStorage.setItem("vr_bestCityPct", cityPct); } catch (e) {}
+  const medals = ["#f0d48a", "#c8ccd8", "#d9a066"];
+  const rows = arr.slice(0, 5).map((p, i) => {
+    const med = medals[i] || "#5a6072", dot = p.me ? "#14f195" : "#" + ((p.color >>> 0).toString(16).padStart(6, "0"));
+    const bg = p.me ? "background:rgba(20,241,149,.12);border:1px solid rgba(20,241,149,.4)" : (i === 0 ? "background:rgba(240,212,138,.1);border:1px solid rgba(240,212,138,.35)" : "background:rgba(255,255,255,.04);border:1px solid transparent");
+    return `<div class="rrow" style="${bg}"><span class="rk" style="color:${med}">${i + 1}</span><span class="dot" style="background:${dot}"></span><span class="nm"${p.me || i === 0 ? ' style="font-weight:700"' : ""}>${esc(p.name)}</span><span class="ms">${p.score.toLocaleString()}</span></div>`;
+  }).join("");
+  const chips = [];
+  if (won) chips.push('<span class="badgechip" style="background:linear-gradient(90deg,rgba(153,69,255,.22),rgba(20,241,149,.22));border:1px solid rgba(20,241,149,.4);color:#7ff2c4">★ VICTORY</span>');
+  if (newHigh) chips.push('<span class="badgechip" style="background:rgba(240,212,138,.16);border:1px solid rgba(240,212,138,.4);color:#f0d48a">NEW HIGH SCORE</span>');
+  freshSkins.forEach((nm) => chips.push(`<span class="badgechip" style="background:rgba(240,212,138,.2);border:1px solid rgba(240,212,138,.55);color:#ffd166">🔓 SKIN UNLOCKED — ${esc(nm)}</span>`));
+  const badges = chips.length ? `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">${chips.join("")}</div>` : "";
+  $("#results-body").innerHTML =
+    `<div style="text-align:center;margin-bottom:18px"><div style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8a90a2;margin-bottom:6px">${room.state.mode === "battle" ? "Battle" : "Classic"} · Match over</div><div style="display:flex;align-items:center;justify-content:center;gap:16px"><div style="font-size:44px;font-weight:700;letter-spacing:-.02em;color:${color};line-height:1">${title}</div><div style="font-family:var(--mono);font-size:44px;font-weight:700;color:${gradeCol};text-shadow:0 0 22px ${gradeCol}66" title="Run grade">${grade}</div></div><div style="font-size:14px;color:#9ba1b5;margin-top:7px">${sub} · You devoured ${cityPct}% of the city${LSn("vr_bestCityPct") > cityPct ? " (best " + LSn("vr_bestCityPct") + "%)" : ""}</div></div>`
+    + badges
+    + `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:13px 15px;margin-bottom:16px"><div><div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#8a90a2">Payout</div><div style="font-size:12px;color:#9ba1b5;margin-top:3px">Free match · SOL staking coming soon</div></div><div style="font-family:var(--mono);font-size:20px;font-weight:700;color:#c4a3ff;white-space:nowrap">FREE</div></div>`
+    + rows
+    + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0"><div class="rstat"><div class="k">This run</div><div class="v">${runMass.toLocaleString()}</div></div><div class="rstat"><div class="k">Final size</div><div class="v">Ø ${meH ? Math.round(meH.radius * 2) : "—"}m · Lv ${runPeakLevel}</div></div><div class="rstat"><div class="k">Lifetime high</div><div class="v" style="color:#c4a3ff">${best.toLocaleString()}</div></div><div class="rstat"><div class="k">Wins / rounds</div><div class="v">${wins} / ${games}</div></div></div>`
+    + `<div style="display:flex;gap:9px"><button id="r-again" class="btnfull" style="flex:1;box-shadow:0 8px 22px rgba(20,241,149,.25)">Play again</button><button id="r-lobby" class="btnghost">Lobby</button><button id="r-share" class="btnghost" style="width:48px;padding:13px 0">↗</button></div>`;
+  $("#r-again").onclick = () => { runPeakLevel = meH ? meH.level : 1; showScreen("game"); };
+  $("#r-lobby").onclick = () => leaveToLanding();
+  $("#r-share").onclick = () => toast("Share — coming soon");
+  showScreen("results");
+}
+function cleanupRoom() { clearInterval(pingTimer); clearInterval(inputTimer); room = null; predicted.has = false; for (const [, mm] of foodMeshes) disposeFood(mm); foodMeshes.clear(); renderMeta(); }
+function leaveToLanding() { leftIntentionally = true; try { if (room) room.leave(); } catch (e) {} cleanupRoom(); showScreen("landing"); }
+// ---- controls + nav wiring ----
+{ const fs = $("#btnFs"); if (fs) fs.onclick = () => { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} }; }
+{ const mu = $("#btnMute"); if (mu) mu.onclick = () => { muted = !muted; mu.textContent = muted ? "🔇" : "♪"; }; }
+{ const el = $("#howto-back"); if (el) el.onclick = () => showScreen("landing"); }
+{ const el = $("#howto-play"); if (el) el.onclick = () => showScreen("landing"); }
+{ const el = $("#wallet-back"); if (el) el.onclick = () => { clearTimeout(walletTimer); showScreen("landing"); }; }
+{ const el = $("#skins-back"); if (el) el.onclick = () => showScreen("landing"); }
+{ const el = $("#skins-open"); if (el) el.onclick = () => { renderSkins(); updateSkinPreview(); showScreen("skins"); }; }
+{ const el = $("#lobby-leave"); if (el) el.onclick = () => { clearTimeout(lobbyTimer); toast("Left lobby · stake refunded (simulated)"); showScreen("landing"); }; }
+renderTiers(); renderSkins(); updateSkinPreview();
+
+if (typeof THREE !== "undefined") { initThree(); requestAnimationFrame(loop); }
+else { drawDebug(); }
+</script>
+</body>
+</html>

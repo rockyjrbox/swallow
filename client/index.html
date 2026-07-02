@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>VOIDRUN — Online (debug client)</title>
+<style>
+  :root{ --green:#14f195; --purple:#9945ff; --ink:#0d1220; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0d1220;color:#e8ecf5;font-family:ui-monospace,Menlo,Consolas,monospace}
+  #c{position:fixed;inset:0;display:block;touch-action:none;cursor:crosshair}
+  .hud{position:fixed;pointer-events:none;font-size:12px;text-shadow:0 1px 3px #000;z-index:3}
+  #top{top:12px;left:12px}
+  #board{top:12px;right:12px;text-align:right;min-width:160px}
+  #board .row{display:flex;justify-content:space-between;gap:14px;margin-top:3px}
+  #board .me{color:var(--green);font-weight:700}
+  #dbg{position:fixed;left:12px;bottom:10px;font-size:11px;color:#7f8aa3;z-index:3;pointer-events:none;text-shadow:0 1px 2px #000}
+  #dbg .e{color:#ff7a7a}
+  #status{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:radial-gradient(120% 100% at 50% 0%,#16213e,#0d1220)}
+  #status.hidden{display:none}
+  #status h1{font-size:34px;letter-spacing:.04em}
+  #status h1 b{color:var(--green)}
+  #status input{font:inherit;padding:10px 14px;border-radius:10px;border:1px solid #2a3550;background:#111a30;color:#fff;text-align:center}
+  #status button{font:inherit;font-weight:700;cursor:pointer;padding:11px 22px;border:none;border-radius:11px;background:linear-gradient(90deg,var(--purple),var(--green));color:#06121f}
+  .pill{display:inline-block;background:rgba(255,255,255,.06);border:1px solid #2a3550;border-radius:8px;padding:3px 8px;margin-top:4px}
+  #banner{position:fixed;top:46%;left:50%;transform:translateX(-50%);font-size:30px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:3}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud" id="top">
+  <div>VOIDRUN <span style="color:var(--green)">online</span> · authoritative server</div>
+  <div class="pill">Lv <span id="lvl">1</span></div>
+  <div class="pill">mass <span id="score">0</span></div>
+  <div class="pill">time <span id="time">—</span></div>
+  <div class="pill" id="ping">— ms</div>
+</div>
+<div class="hud" id="board"></div>
+<div id="dbg">booting…</div>
+<div id="banner"></div>
+
+<div id="status">
+  <h1>VOID<b>RUN</b></h1>
+  <div style="opacity:.7;font-size:13px">Server-authoritative prototype · move with mouse or WASD</div>
+  <input id="name" maxlength="16" placeholder="your name" value="Player" />
+  <button id="play">Connect &amp; play</button>
+  <div id="err" style="color:#ff7a7a;font-size:12px;min-height:16px"></div>
+</div>
+
+<!-- exact colyseus.js that matches the server, served locally (no CDN dependency) -->
+<script src="colyseus.js"></script>
+<script>
+/* =========================================================================
+   Thin, self-diagnosing debug client.
+     • sends an INPUT DIRECTION to the server (~20 Hz), never a position
+     • reads room.state every frame and renders it
+     • predicts ONLY its own hole locally, then reconciles toward the server
+   The render loop is hardened: it reschedules itself FIRST (so a thrown frame
+   can never kill rendering) and surfaces any error to the on-screen #dbg line.
+   ========================================================================= */
+const ENDPOINT = location.origin.replace(/^http/, "ws");
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+// world tuning mirrored from the server (server stays authoritative)
+const START_RADIUS = 1.6, BASE_SPEED = 22, SPEED_FALLOFF = 0.35, WORLD = 300;
+const speedFor = (r) => BASE_SPEED * Math.pow(START_RADIUS / r, SPEED_FALLOFF);
+
+let room = null, myId = null, connState = "idle", lastError = "";
+let input = { dx: 0, dz: 0 };
+const keys = {};
+const pointer = { x: 0, y: 0, active: false };
+const predicted = { x: 0, z: 0, has: false };
+const rendered = new Map();
+let lastPing = 0, pingMs = 0, fps = 0;
+
+if (typeof Colyseus === "undefined") {
+  lastError = "colyseus.js failed to load (check that the page is served from the game server)";
+}
+
+function fitCanvas() {
+  if (canvas.width !== innerWidth || canvas.height !== innerHeight) {
+    canvas.width = innerWidth; canvas.height = innerHeight;
+  }
+}
+
+// ---------------- input ----------------
+addEventListener("keydown", (e) => { keys[e.key.toLowerCase()] = true; });
+addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
+canvas.addEventListener("pointermove", (e) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
+canvas.addEventListener("pointerdown", (e) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
+
+function computeInput() {
+  let dx = 0, dz = 0;
+  if (keys["w"] || keys["arrowup"]) dz -= 1;
+  if (keys["s"] || keys["arrowdown"]) dz += 1;
+  if (keys["a"] || keys["arrowleft"]) dx -= 1;
+  if (keys["d"] || keys["arrowright"]) dx += 1;
+  if (dx === 0 && dz === 0 && pointer.active) {
+    const vx = pointer.x - canvas.width / 2, vy = pointer.y - canvas.height / 2;
+    if (Math.hypot(vx, vy) > 28) { dx = vx; dz = vy; }
+  }
+  const len = Math.hypot(dx, dz);
+  input = len > 1e-4 ? { dx: dx / len, dz: dz / len } : { dx: 0, dz: 0 };
+}
+
+// ---------------- connect ----------------
+async function play() {
+  const name = document.getElementById("name").value.trim() || "Player";
+  const errEl = document.getElementById("err");
+  connState = "connecting"; errEl.textContent = "connecting…";
+  try {
+    const client = new Colyseus.Client(ENDPOINT);
+    room = await client.joinOrCreate("arena", { name });
+    myId = room.sessionId;
+    connState = "joined";
+    errEl.textContent = "";
+    document.getElementById("status").classList.add("hidden");
+
+    room.onStateChange.once(() => { predicted.has = false; }); // re-init prediction on first state
+    room.onError((code, msg) => { lastError = "room error " + code + " " + (msg || ""); });
+    room.onLeave((code) => { connState = "left(" + code + ")"; });
+    room.onMessage("match_over", (m) => {
+      const b = document.getElementById("banner");
+      b.textContent = (m.winner ? m.winner + " wins" : "Match over"); b.style.opacity = "1";
+    });
+    room.onMessage("match_reset", () => { document.getElementById("banner").style.opacity = "0"; });
+    room.onMessage("pong", () => { pingMs = Math.round(performance.now() - lastPing); });
+
+    setInterval(() => { if (room) { lastPing = performance.now(); room.send("ping"); } }, 1000);
+    setInterval(() => { if (room) room.send("input", input); }, 50);
+  } catch (e) {
+    connState = "failed";
+    lastError = String(e && e.message || e);
+    errEl.textContent = "could not connect: " + lastError;
+  }
+}
+document.getElementById("play").addEventListener("click", play);
+document.getElementById("name").addEventListener("keydown", (e) => { if (e.key === "Enter") play(); });
+
+// ---------------- render loop (hardened) ----------------
+let last = performance.now(), fpsT = 0, fpsN = 0;
+function frame(now) {
+  requestAnimationFrame(frame); // reschedule FIRST — the loop can never die
+  try {
+    fitCanvas();
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    fpsN++; fpsT += dt; if (fpsT >= 0.5) { fps = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
+    computeInput();
+
+    if (room && room.state && room.state.holes) {
+      const me = room.state.holes.get(myId);
+      if (me) {
+        if (!predicted.has) { predicted.x = me.x; predicted.z = me.z; predicted.has = true; }
+        const sp = speedFor(me.radius);
+        predicted.x += input.dx * sp * dt;
+        predicted.z += input.dz * sp * dt;
+        predicted.x += (me.x - predicted.x) * Math.min(1, dt * 6);
+        predicted.z += (me.z - predicted.z) * Math.min(1, dt * 6);
+      }
+      draw(me, dt);
+      updateHud(me);
+    } else {
+      drawWaiting();
+    }
+  } catch (e) {
+    lastError = String(e && e.message || e);
+  }
+  drawDebug();
+}
+requestAnimationFrame(frame);
+
+function smooth(id, tx, tz, dt) {
+  let r = rendered.get(id);
+  if (!r) { r = { x: tx, z: tz }; rendered.set(id, r); }
+  r.x += (tx - r.x) * Math.min(1, dt * 12);
+  r.z += (tz - r.z) * Math.min(1, dt * 12);
+  return r;
+}
+
+function drawWaiting() {
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = "#0d1220"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#5a6478"; ctx.font = "14px ui-monospace"; ctx.textAlign = "center";
+  ctx.fillText(connState === "joined" ? "waiting for first state…" : "not connected — click Connect & play", W / 2, H / 2);
+}
+
+function draw(me, dt) {
+  const W = canvas.width, H = canvas.height, cx = W / 2, cy = H / 2;
+  const myR = me ? me.radius : START_RADIUS;
+  const scale = Math.max(3.0, 9 * Math.pow(START_RADIUS / myR, 0.25));
+  const camX = me ? predicted.x : 0, camZ = me ? predicted.z : 0;
+  const toS = (wx, wz) => [cx + (wx - camX) * scale, cy + (wz - camZ) * scale];
+
+  ctx.fillStyle = "#0d1220"; ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = "rgba(120,140,180,.10)"; ctx.lineWidth = 1;
+  for (let g = -WORLD / 2; g <= WORLD / 2; g += 15) {
+    let [ax, ay] = toS(g, -WORLD / 2), [bx, by] = toS(g, WORLD / 2);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    let [px, py] = toS(-WORLD / 2, g), [qx, qy] = toS(WORLD / 2, g);
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(qx, qy); ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(120,140,180,.35)";
+  let [bx0, by0] = toS(-WORLD / 2, -WORLD / 2);
+  ctx.strokeRect(bx0, by0, WORLD * scale, WORLD * scale);
+
+  room.state.food.forEach((f, id) => {
+    const r = smooth("f" + id, f.x, f.z, dt);
+    const [sx, sy] = toS(r.x, r.z);
+    const pr = Math.max(1.5, f.size * scale * 0.5);
+    ctx.fillStyle = f.points >= 50 ? "#8fa6c8" : f.points >= 18 ? "#9fb3c8" : f.points >= 7 ? "#5fae5f" : "#cfd6e4";
+    ctx.beginPath(); ctx.arc(sx, sy, pr, 0, 7); ctx.fill();
+  });
+
+  room.state.holes.forEach((h, id) => {
+    const isMe = id === myId;
+    const r = isMe && predicted.has ? predicted : smooth(id, h.x, h.z, dt);
+    const [sx, sy] = toS(r.x, r.z);
+    const pr = Math.max(0, h.radius * scale);
+    ctx.fillStyle = "#05070d";
+    ctx.beginPath(); ctx.arc(sx, sy, pr, 0, 7); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = "#" + ((h.color >>> 0) || 0x14f195).toString(16).padStart(6, "0");
+    ctx.beginPath(); ctx.arc(sx, sy, pr, 0, 7); ctx.stroke();
+    ctx.fillStyle = isMe ? "#14f195" : "#c7d2e6"; ctx.font = "12px ui-monospace"; ctx.textAlign = "center";
+    ctx.fillText(h.name + (h.isBot ? " ·bot" : "") + "  " + Math.round(h.score), sx, sy - pr - 6);
+  });
+}
+
+function updateHud(me) {
+  if (me) {
+    document.getElementById("lvl").textContent = me.level;
+    document.getElementById("score").textContent = Math.round(me.score);
+  }
+  const t = Math.max(0, Math.floor(room.state.timeLeft));
+  document.getElementById("time").textContent = Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0");
+  document.getElementById("ping").textContent = pingMs + " ms";
+  const arr = [];
+  room.state.holes.forEach((h, id) => arr.push({ name: h.name, score: h.score, me: id === myId }));
+  arr.sort((a, b) => b.score - a.score);
+  document.getElementById("board").innerHTML = arr.slice(0, 6)
+    .map(r => `<div class="row ${r.me ? "me" : ""}"><span>${r.name}</span><span>${Math.round(r.score)}</span></div>`).join("");
+}
+
+function drawDebug() {
+  const holes = room && room.state && room.state.holes ? room.state.holes.size : 0;
+  const food = room && room.state && room.state.food ? room.state.food.size : 0;
+  document.getElementById("dbg").innerHTML =
+    `conn:${connState} · holes:${holes} food:${food} · ${fps}fps · ${canvas.width}×${canvas.height}` +
+    (lastError ? ` · <span class="e">ERR: ${lastError}</span>` : "");
+}
+</script>
+</body>
+</html>

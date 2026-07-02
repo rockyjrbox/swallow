@@ -1,0 +1,14 @@
+# Render Blueprint — one free web service that builds the Dockerfile (server + client, one process).
+# On Render: New → Blueprint → pick this repo → it reads this file and deploys. No card needed on the Free plan.
+services:
+  - type: web
+    name: swallow-arena
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # NOTE: Render injects its own PORT — the server reads process.env.PORT, so don't hardcode it here.
