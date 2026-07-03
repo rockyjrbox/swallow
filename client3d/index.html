@@ -790,6 +790,7 @@ function disposeFood(m) {
   if (m.proc) m.group.traverse((n) => { if (n.isMesh) { n.geometry && n.geometry.dispose(); const mm = Array.isArray(n.material) ? n.material : [n.material]; mm.forEach((x) => x && x.dispose()); } });
 }
 const MOVING_KINDS = new Set(["car", "van", "bus", "person"]); // driven/walked by the server each tick
+const TALL_KINDS = new Set(["building_small", "house", "factory", "building_mid", "crane", "mall", "skyscraper", "office_tower", "hotel_tower", "tower_tall", "stadium", "megatower", "monument"]);
 function makeFoodMesh(f, id) {
   const m = MODELS[f.kind] || MODELS.car;
   const glb = tryModel(f.kind, m.foot, id);
@@ -799,7 +800,41 @@ function makeFoodMesh(f, id) {
   group.position.x = f.x; group.position.z = f.z;
   group.rotation.y = (f.yaw || 0) + (m.yaw || 0);
   scene.add(group);
-  return { group, proc: !glb, size: f.size || 1, points: f.points || 0, baseScale: group.scale.x, baseY: group.position.y, sinking: false, fall: 0, moving: MOVING_KINDS.has(f.kind) };
+  return { group, proc: !glb, size: f.size || 1, points: f.points || 0, baseScale: group.scale.x, baseY: group.position.y, sinking: false, fall: 0, moving: MOVING_KINDS.has(f.kind), tall: TALL_KINDS.has(f.kind), fade: 1 };
+}
+
+// Occlusion fade: a tall building sitting between the camera and YOUR hole goes
+// semi-transparent so it never blocks the view, and fades back once you pass it.
+function fadeOccluders(dt, px, pz) {
+  const cx = camera.position.x, cz = camera.position.z, cy = camera.position.y;
+  const sx = px - cx, sz = pz - cz;                 // camera→player segment (XZ)
+  const segLen2 = sx * sx + sz * sz || 1;
+  for (const [, m] of foodMeshes) {
+    if (!m.tall || m.sinking) continue;
+    const g = m.group.position;
+    // closest point on the segment to the building (XZ)
+    const t = Math.max(0, Math.min(1, ((g.x - cx) * sx + (g.z - cz) * sz) / segLen2));
+    const dx = g.x - (cx + sx * t), dz = g.z - (cz + sz * t);
+    let occluding = false;
+    if (t > 0.03 && t < 0.97 && dx * dx + dz * dz < (m.size * 0.9 + 1.6) ** 2) {
+      if (m.h === undefined) m.h = new THREE.Box3().setFromObject(m.group).max.y; // lazy height, once
+      occluding = m.h >= cy * (1 - t) * 0.55;       // tall enough to actually cross the sight line
+    }
+    const target = occluding ? 0.24 : 1;
+    if (m.fade === 1 && target === 1) continue;     // fast path — nothing to do
+    m.fade += (target - m.fade) * Math.min(1, dt * 8);
+    if (target === 1 && m.fade > 0.985) m.fade = 1;
+    if (!m.mats) {                                   // clone materials per-instance ONCE (GLB clones share them)
+      m.mats = [];
+      m.group.traverse((o) => { if (o.isMesh && o.material) { o.material = o.material.clone(); m.mats.push(o.material); } });
+    }
+    for (let i = 0; i < m.mats.length; i++) {
+      const mt = m.mats[i];
+      mt.transparent = m.fade < 1;
+      mt.opacity = m.fade;
+      mt.depthWrite = m.fade >= 0.6;                 // ghosted walls don't hide what's behind them
+    }
+  }
 }
 
 // ----------------------------------------------------------- holes (stencil)
@@ -1089,6 +1124,7 @@ function loop(now) {
       if (camFollow.x === undefined) { camFollow.x = tx; camFollow.z = tz; }
       const cf = Math.min(1, dt * 5); camFollow.x += (tx - camFollow.x) * cf; camFollow.z += (tz - camFollow.z) * cf;
       camera.position.set(camFollow.x, camHeight, camFollow.z + camHeight * 0.40 + oz); camera.lookAt(px, 0, pz); // 0.40 z-offset ≈ 68° pitch (steeper, hole.io-like)
+      fadeOccluders(dt, px, pz); // ghost tall buildings that block the view of your hole
       sun.position.set(px + 45, 90, pz + 30); sun.target.position.set(px, 0, pz); sun.target.updateMatrixWorld();
       updateParticles(dt);
       updateHud(me);
