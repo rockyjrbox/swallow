@@ -12,7 +12,7 @@ A browser **hole.io-style battle royale**: you are a black hole roaming a 3D cit
 smaller than you (people → cars → buildings → skyscrapers → monuments), growing bigger, and out-massing
 rivals. It is **real-time multiplayer** on an authoritative server (not fake bots — genuine netcode).
 
-**The product goal:** a **Solana-staked** version — pay SOL to enter a match, winner takes the pot. So the
+**The product goal:** a **Robinhood Chain-staked** version — pay $SWALLOW to enter a match, winner takes the pot. So the
 UI must eventually support **wallet connect, stakes, a lobby, and payouts**, in addition to free play.
 
 **Two modes today:**
@@ -35,8 +35,8 @@ Keep a strong, ownable wordmark. A hole/void glyph (a dark circle with a conic p
 **Color tokens (from the live build — match these so UI and game feel like one product):**
 | Token | Hex | Use |
 |---|---|---|
-| `--purple` | `#9945ff` | Solana purple — primary accent, gradients |
-| `--green` | `#14f195` | Solana green — primary accent, player, success, CTAs |
+| `--deep` | `#0a8f3f` | Deep green — gradient partner |
+| `--green` | `#00c805` | Robinhood green — primary accent, player, success, CTAs |
 | `--hot` | `#ff5c5c` / `#ff4040` | danger, threats, the battle zone, "eliminated" |
 | `--ink` | `#0d1220` | near-black text / dark surfaces |
 | gold rim | `#f0d48a`-ish | the hole's rim ring in-world (accent only) |
@@ -70,8 +70,8 @@ Classic/Battle toggle, a one-line mode hint, a best-score line, and a "Connect &
 - Hero: **VOIDRUN wordmark** + the void glyph + a one-line tagline ("Swallow the city. Outgrow everyone.").
 - Optional looping background (muted 3D city / hole motif) behind a readable panel.
 - **Player name** input (max 16 chars).
-- **Mode selector** — cards or segmented control for **Free / Classic**, **Battle**, and **Staked** (staked can be shown as "coming soon / connect wallet"). Each card: title, 1-line description, a badge (FREE, or "0.05 SOL", or "LAST STANDING").
-- **Wallet area**: "Connect wallet" (Phantom) button + connected state (truncated address `9xQe…4f`, SOL balance). When not connected, staked modes are gated with a nudge.
+- **Mode selector** — cards or segmented control for **Free / Classic**, **Battle**, and **Staked** (staked can be shown as "coming soon / connect wallet"). Each card: title, 1-line description, a badge (FREE, or "500 $SWALLOW", or "LAST STANDING").
+- **Wallet area**: "Connect wallet" (MetaMask) button + connected state (truncated address `0x9fQe…4f`, $SWALLOW balance). When not connected, staked modes are gated with a nudge.
 - **Meta strip**: best mass, games played, wins (from local stats now; account later).
 - **Primary CTA**: "Play" / "Connect & play".
 - **Skin picker** entry (see 3.10) — a few color swatches or "Customize" link.
@@ -79,9 +79,9 @@ Classic/Battle toggle, a one-line mode hint, a best-score line, and a "Connect &
 - **States:** default, wallet-connecting, wallet-connected, staked-mode-selected-but-no-wallet (error nudge), returning player (shows stats), first-time (no stats).
 
 ### 3.2 Wallet connect flow
-Modal/inline states for the Solana (Phantom) connection: **Connect → Signing (Sign-In-With-Solana) →
+Modal/inline states for the EVM (MetaMask) wallet connection: **Connect → Signing (Sign-In-With-Ethereum) →
 Connected**, plus errors (rejected, no wallet installed, wrong network). Show address + balance when connected.
-For staked play: a **stake confirmation** step ("Stake 0.05 SOL to enter · pot 0.25 SOL · winner takes it") with
+For staked play: a **stake confirmation** step ("Stake 500 $SWALLOW to enter · pot 2,500 $SWALLOW · winner takes it") with
 Approve/Cancel and a pending/confirmed transaction state. (Never asks for keys — wallet handles it.)
 
 ### 3.3 Lobby / matchmaking  *(for staked + battle)*
@@ -90,7 +90,7 @@ list of **joined players** (name, avatar/skin dot, "staked ✓"), **N/max player
 state, "cancel / leave" (refund messaging for staked). **States:** searching, filling (3/5), full → starting, cancelled/refund.
 
 ### 3.4 Pre-match countdown
-Big centered **3 · 2 · 1** over a dimmed scene, with the mode + stake line ("Battle · pot 0.25 SOL · winner takes all"
+Big centered **3 · 2 · 1** over a dimmed scene, with the mode + stake line ("Battle · pot 2,500 $SWALLOW · winner takes all"
 / "Free run · play for the board"). Short, punchy.
 
 ### 3.5 In-game HUD  *(overlay — never blocks steering)*
@@ -118,7 +118,7 @@ Updates continuously. Design compact rows that read over the bright scene.
 End-of-match. Content:
 - **Outcome headline:** "You win!" / "You placed #3" / "Eliminated".
 - **Ranked list:** rank, skin dot, name (you tagged), final mass. Winner emphasized.
-- **Payout line (staked):** "You won the pot — **+0.25 SOL** settles to your wallet (minus fee)" or "Pot goes to Nyx. Stake not recovered." (transaction state for real settlement).
+- **Payout line (staked):** "You won the pot — **+2,500 $SWALLOW** settles to your wallet (minus fee)" or "Pot goes to Nyx. Stake not recovered." (transaction state for real settlement).
 - **Record badges:** "NEW HIGH SCORE", "BIGGEST VOID YET", milestone tags.
 - **Your run stats:** this run mass, best combo/level, lifetime high score, wins/rounds.
 - **CTAs:** "Play again" (same mode), "Back to lobby", "Share".
@@ -152,7 +152,7 @@ toggle for weaker phones), account/wallet, language slot. Simple, sectioned.
 - Levels 1–12; mass/score 0–~5000; match 2:00 countdown; ping ~5–60ms.
 - Object tiers (for iconography if needed): person, cone, hydrant, bench, car, tree, bus, fountain, house, factory,
   building, crane, mall, skyscraper, office/hotel/tall tower, stadium, megatower, monument.
-- Stake example: 0.05 SOL entry × 5 players = **0.25 SOL pot**; wallet balance e.g. `1.20 SOL`; address `9xQe…4f2a`.
+- Stake example: 500 $SWALLOW entry × 5 players = **2,500 $SWALLOW pot**; wallet balance e.g. `12,400 $SWALLOW`; address `0x9fQe…4f2a`.
 - Power-up: **Speed boost** (cyan), 5s.
 
 ---

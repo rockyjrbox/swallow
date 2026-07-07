@@ -15,12 +15,12 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Swallow — eat the whole city" />
 <meta name="twitter:description" content="A real-time multiplayer hole battle royale. Eat, grow, dominate. swallow.games" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%239945ff'/><stop offset='1' stop-color='%2314f195'/></linearGradient></defs><rect width='32' height='32' rx='7' fill='%230d1220'/><circle cx='16' cy='16' r='9' fill='none' stroke='url(%23g)' stroke-width='4'/><circle cx='16' cy='16' r='4' fill='%23050608'/></svg>" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%230a8f3f'/><stop offset='1' stop-color='%2300c805'/></linearGradient></defs><rect width='32' height='32' rx='7' fill='%230d1220'/><circle cx='16' cy='16' r='9' fill='none' stroke='url(%23g)' stroke-width='4'/><circle cx='16' cy='16' r='4' fill='%23050608'/></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --green:#14f195; --purple:#9945ff; }
+  :root{ --green:#00c805; --purple:#0a8f3f; }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden;background:#9fd2f5;color:#0d1220;font-family:ui-monospace,Menlo,Consolas,monospace}
   #c{position:fixed;inset:0;display:block;touch-action:none;cursor:crosshair}
@@ -37,10 +37,10 @@
 </style>
 <style id="vrui">
 :root{
-  --purple:#9945ff;--green:#14f195;--hot:#ff4040;--hot2:#ff5c5c;
+  --purple:#0a8f3f;--green:#00c805;--hot:#ff4040;--hot2:#ff5c5c;
   --bg:#080a12;--panel:#0b0e18;--ink:#0d1220;
   --tx:#eef1f7;--mut:#9ba1b5;--dim:#8a90a2;--faint:#5a6072;
-  --pl:#c4a3ff;--gl:#7ff2c4;--gold:#f0d48a;
+  --pl:#8fe0a8;--gl:#7ff2c4;--gold:#f0d48a;
   --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
   --disp:'Space Grotesk',system-ui,sans-serif;
 }
@@ -58,7 +58,7 @@ html,body{background:var(--bg);color:var(--tx);font-family:var(--disp);overflow:
 @keyframes vr-fall{0%{transform:translateX(280px) rotate(0) scale(1);opacity:0}12%{opacity:1}82%{opacity:1}100%{transform:translateX(24px) rotate(220deg) scale(.06);opacity:0}}
 @keyframes vr-twinkle{0%,100%{opacity:.15}50%{opacity:.9}}
 @keyframes vr-scrollcue{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(7px);opacity:1}}
-@keyframes vr-glow{0%,100%{box-shadow:0 0 60px 8px rgba(153,69,255,.5),0 0 120px 30px rgba(20,241,149,.25)}50%{box-shadow:0 0 90px 18px rgba(153,69,255,.7),0 0 160px 44px rgba(20,241,149,.4)}}
+@keyframes vr-glow{0%,100%{box-shadow:0 0 60px 8px rgba(10,143,63,.5),0 0 120px 30px rgba(0,200,5,.25)}50%{box-shadow:0 0 90px 18px rgba(10,143,63,.7),0 0 160px 44px rgba(0,200,5,.4)}}
 @keyframes vr-driftx{0%{transform:translate(0,0)}50%{transform:translate(-24px,-14px)}100%{transform:translate(0,0)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 
@@ -75,7 +75,7 @@ html,body{background:var(--bg);color:var(--tx);font-family:var(--disp);overflow:
 #board{top:14px;right:14px;width:196px;font-family:var(--mono);background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(13,18,32,.1);border-radius:13px;padding:9px 8px;box-shadow:0 4px 18px rgba(20,30,60,.13);min-width:0}
 #board .lbh{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#5a6072;padding:2px 6px 7px}
 #board .row{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:8px;margin:0}
-#board .row.me{background:rgba(20,241,149,.14)}
+#board .row.me{background:rgba(0,200,5,.14)}
 #board .rk{font-size:11px;color:#8a90a2;width:14px}
 #board .dot{width:9px;height:9px;border-radius:50%;flex:none}
 #board .nm{font-family:var(--disp);font-size:12px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -87,7 +87,7 @@ html,body{background:var(--bg);color:var(--tx);font-family:var(--disp);overflow:
 #dbg{color:#8a90a2}
 
 /* toast */
-.vr-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:80;background:rgba(13,18,32,.94);border:1px solid rgba(153,69,255,.45);color:#e6e9f2;font-family:var(--mono);font-size:13px;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:88vw;text-align:center}
+.vr-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:80;background:rgba(13,18,32,.94);border:1px solid rgba(10,143,63,.45);color:#e6e9f2;font-family:var(--mono);font-size:13px;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:88vw;text-align:center}
 .vr-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .vr-score{position:fixed;z-index:5;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--mono);font-weight:700;font-size:15px;color:#fff;text-shadow:0 2px 7px rgba(0,0,0,.55),0 0 3px rgba(0,0,0,.4);will-change:transform,opacity;animation:vr-score .85s cubic-bezier(.2,.9,.3,1) forwards}
 #comboPill{display:none;position:fixed;top:58%;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;font-family:var(--mono);font-weight:700;font-size:26px;color:#ffd166;text-shadow:0 3px 12px rgba(0,0,0,.5);transition:transform .12s}
@@ -107,10 +107,10 @@ body.in-game #comboPill.show{display:block}
 .hmark{position:relative;width:26px;height:26px;flex:none;display:inline-block}
 .hmark::before{content:"";position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(from 210deg,var(--purple),var(--green),var(--purple));animation:vr-ring 8s linear infinite}
 .hmark::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 42%,#05060a 50%,#171d31)}
-.wbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:11px;cursor:pointer;background:rgba(153,69,255,.16);border:1px solid rgba(153,69,255,.45);color:#d3bcff;font-family:var(--disp);font-size:13px;font-weight:600}
-.wbtn:hover{background:rgba(153,69,255,.26)}
+.wbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:11px;cursor:pointer;background:rgba(10,143,63,.16);border:1px solid rgba(10,143,63,.45);color:#b8ecc7;font-family:var(--disp);font-size:13px;font-weight:600}
+.wbtn:hover{background:rgba(10,143,63,.26)}
 .wbtn .sq{width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--purple),var(--green))}
-.wbadge{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;padding:2px 6px;border-radius:5px;background:rgba(153,69,255,.2);color:var(--pl)}
+.wbadge{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;padding:2px 6px;border-radius:5px;background:rgba(10,143,63,.2);color:var(--pl)}
 .hero{position:relative;min-height:calc(100% - 58px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:6px clamp(18px,5vw,40px) 44px}
 .ticker{display:inline-flex;align-items:center;gap:13px;padding:8px 17px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-family:var(--mono);font-size:11.5px;color:#c6cad6;flex-wrap:wrap;justify-content:center;animation:vr-rise .5s ease}
 .liveDot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:vr-pulse 1.4s infinite}
@@ -123,7 +123,7 @@ body.in-game #comboPill.show{display:block}
 .void .eh{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 42%,#000 44%,#0b0f1c 72%,#1e2740 100%);box-shadow:inset 0 12px 44px rgba(0,0,0,.9),0 0 0 2px rgba(240,212,138,.32)}
 .void .eh2{position:absolute;inset:22%;border-radius:50%;background:radial-gradient(circle at 46% 38%,rgba(120,90,180,.35),transparent 60%)}
 .htitle{margin:0;font-size:clamp(48px,9.5vw,96px);font-weight:700;line-height:.82;letter-spacing:-.035em}
-.htitle .run{background:linear-gradient(90deg,var(--purple),var(--green),var(--purple));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 26px rgba(20,241,149,.45));animation:vr-sheen 4s linear infinite}
+.htitle .run{background:linear-gradient(90deg,var(--purple),var(--green),var(--purple));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 26px rgba(0,200,5,.45));animation:vr-sheen 4s linear infinite}
 .hsub{margin:0;font-size:clamp(16px,2.6vw,26px);font-weight:500;color:#b6bccd;max-width:22ch}
 .hsub b{color:var(--tx);font-weight:500}
 .meta{display:flex;gap:22px;font-family:var(--mono);font-size:11px;color:var(--dim);flex-wrap:wrap;justify-content:center}
@@ -131,7 +131,7 @@ body.in-game #comboPill.show{display:block}
 .meta b.g{color:var(--gl)}
 .cta{display:flex;gap:11px;flex-wrap:wrap;justify-content:center;width:100%;max-width:460px;margin-top:4px}
 .namein{flex:1 1 150px;min-width:140px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:13px;padding:15px 16px;color:#fff;font-family:var(--disp);font-size:16px;font-weight:600;outline:none;text-align:center}
-.btnp{flex:2 1 200px;padding:15px 26px;border:none;border-radius:13px;cursor:pointer;font-family:var(--disp);font-size:17px;font-weight:700;color:#0b0e18;background:linear-gradient(90deg,var(--purple),var(--green));box-shadow:0 12px 34px rgba(20,241,149,.32)}
+.btnp{flex:2 1 200px;padding:15px 26px;border:none;border-radius:13px;cursor:pointer;font-family:var(--disp);font-size:17px;font-weight:700;color:#0b0e18;background:linear-gradient(90deg,var(--purple),var(--green));box-shadow:0 12px 34px rgba(0,200,5,.32)}
 .btnp:hover{filter:brightness(1.08)}
 .link{background:none;border:none;cursor:pointer;color:#9ba1b5;font-family:var(--disp);font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .link:hover{color:#fff}
@@ -156,12 +156,12 @@ body.in-game #comboPill.show{display:block}
 .modecard .md{font-size:13.5px;line-height:1.5;color:var(--mut)}
 .gate{display:flex;flex-direction:column;gap:12px;max-width:460px;margin:0 auto}
 .stakeband{text-align:center;overflow:hidden}
-.stakeband .bg{position:absolute;inset:0;background:radial-gradient(90% 120% at 50% 120%,rgba(20,241,149,.14),transparent 70%);pointer-events:none}
+.stakeband .bg{position:absolute;inset:0;background:radial-gradient(90% 120% at 50% 120%,rgba(0,200,5,.14),transparent 70%);pointer-events:none}
 .stakestats{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);margin-top:4px}
 .sstat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 22px}
 .sstat .k{font-size:9px;letter-spacing:.12em;color:var(--dim)}
 .sstat .v{font-size:22px;font-weight:700;color:#fff}
-.sstat.win{background:linear-gradient(180deg,rgba(20,241,149,.14),rgba(255,255,255,.02));border-color:rgba(20,241,149,.4)}
+.sstat.win{background:linear-gradient(180deg,rgba(0,200,5,.14),rgba(255,255,255,.02));border-color:rgba(0,200,5,.4)}
 .sstat.win .k{color:var(--gl)}
 .sstat.win .v{color:var(--green)}
 .footcta{text-align:center;padding:clamp(48px,8vw,90px) clamp(20px,5vw,48px)}
@@ -216,8 +216,8 @@ body.in-game #elim.show{display:flex}
 .cd{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
 .cd .lbl{font-family:var(--mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--pl)}
 .cd .ringwrap{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center}
-.cd .r1{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(20,241,149,.4);animation:vr-ring 3s linear infinite}
-.cd .r2{position:absolute;inset:18px;border-radius:50%;border:2px solid rgba(153,69,255,.4)}
+.cd .r1{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(0,200,5,.4);animation:vr-ring 3s linear infinite}
+.cd .r2{position:absolute;inset:18px;border-radius:50%;border:2px solid rgba(10,143,63,.4)}
 .cd .num{font-size:150px;font-weight:700;line-height:1;background:linear-gradient(90deg,var(--purple),var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
 .cd .num.pop{animation:vr-count 1s ease-in-out}
 .cd .go{font-family:var(--disp);font-size:18px;font-weight:500;color:#e6e9f2}
@@ -237,7 +237,7 @@ body.in-game #elim.show{display:flex}
 .skinhead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
 .chip2{display:flex;align-items:center;gap:7px;border-radius:11px;padding:8px 13px;font-family:var(--mono);font-size:13px;font-weight:700}
 .skinwrap{display:flex;flex-wrap:wrap;gap:22px}
-.skinprev{flex:1 1 200px;max-width:260px;display:flex;flex-direction:column;align-items:center;gap:16px;background:radial-gradient(circle at 50% 35%,rgba(153,69,255,.14),transparent 70%);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:26px 20px}
+.skinprev{flex:1 1 200px;max-width:260px;display:flex;flex-direction:column;align-items:center;gap:16px;background:radial-gradient(circle at 50% 35%,rgba(10,143,63,.14),transparent 70%);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:26px 20px}
 .skinprev .pv{position:relative;width:140px;height:140px;animation:vr-float 5s ease-in-out infinite}
 .skinprev .pv .rr{position:absolute;inset:-5px;border-radius:50%;background:conic-gradient(from 210deg,var(--purple),var(--green),var(--purple));animation:vr-ring 9s linear infinite}
 .skinprev .pv .fill{position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 6px 20px rgba(0,0,0,.5)}
@@ -245,7 +245,7 @@ body.in-game #elim.show{display:flex}
 .skingrid{flex:1 1 340px;display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:11px;align-content:start}
 .stile{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;padding:15px 10px;border-radius:15px;cursor:pointer;transition:.15s;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
 .stile:hover{border-color:rgba(255,255,255,.28)}
-.stile.eq{background:rgba(20,241,149,.08);border-color:rgba(20,241,149,.5)}
+.stile.eq{background:rgba(0,200,5,.08);border-color:rgba(0,200,5,.5)}
 .stile .sw{position:relative;width:60px;height:60px;border-radius:50%;box-shadow:inset 0 4px 12px rgba(0,0,0,.55),0 4px 14px rgba(0,0,0,.3)}
 .stile .sw.lk{opacity:.55}
 .stile .sw .lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;opacity:.85}
@@ -270,11 +270,11 @@ body.in-game #elim.show{display:flex}
   <div class="landing">
     <span class="star" style="top:9%;left:14%;width:3px;height:3px;animation:vr-twinkle 3.2s infinite"></span>
     <span class="star" style="top:16%;left:82%;width:2px;height:2px;animation:vr-twinkle 4.1s .4s infinite"></span>
-    <span class="star" style="top:26%;left:30%;width:2px;height:2px;background:#c4a3ff;animation:vr-twinkle 2.8s .8s infinite"></span>
+    <span class="star" style="top:26%;left:30%;width:2px;height:2px;background:#8fe0a8;animation:vr-twinkle 2.8s .8s infinite"></span>
     <span class="star" style="top:6%;left:60%;width:2px;height:2px;background:#7ff2c4;animation:vr-twinkle 3.6s .2s infinite"></span>
     <span class="star" style="top:33%;left:74%;width:3px;height:3px;animation:vr-twinkle 4.4s 1s infinite"></span>
-    <div class="neb" style="top:-12%;left:-8%;width:440px;height:440px;background:radial-gradient(circle,rgba(153,69,255,.34),transparent 68%);animation:vr-driftx 17s ease-in-out infinite"></div>
-    <div class="neb" style="top:18%;right:-12%;width:480px;height:480px;background:radial-gradient(circle,rgba(20,241,149,.26),transparent 68%);animation:vr-driftx 22s ease-in-out infinite reverse"></div>
+    <div class="neb" style="top:-12%;left:-8%;width:440px;height:440px;background:radial-gradient(circle,rgba(10,143,63,.34),transparent 68%);animation:vr-driftx 17s ease-in-out infinite"></div>
+    <div class="neb" style="top:18%;right:-12%;width:480px;height:480px;background:radial-gradient(circle,rgba(0,200,5,.26),transparent 68%);animation:vr-driftx 22s ease-in-out infinite reverse"></div>
 
     <div class="lhead">
       <div style="display:flex;align-items:center;gap:10px"><span class="hmark"></span><span class="wm"><span class="gg">Swallow</span></span></div>
@@ -287,14 +287,14 @@ body.in-game #elim.show{display:flex}
       <div class="ticker">
         <span style="display:flex;align-items:center;gap:6px"><span class="liveDot"></span>1,284 playing now</span>
         <span class="sep">·</span><span style="color:#7ff2c4;font-weight:700">Free — no wallet needed</span>
-        <span class="sep">·</span><span style="color:#c4a3ff">staking coming soon</span>
+        <span class="sep">·</span><span style="color:#8fe0a8">staking coming soon</span>
       </div>
       <div class="void" aria-hidden="true">
         <span class="obj" style="transform:rotate(18deg)"><span style="width:17px;height:17px;background:#3ba9ff;box-shadow:0 0 10px #3ba9ff88;animation-duration:3.2s"></span></span>
         <span class="obj" style="transform:rotate(63deg)"><span style="width:11px;height:11px;background:#ffd23b;animation-duration:3.8s;animation-delay:-.6s"></span></span>
         <span class="obj" style="transform:rotate(108deg)"><span style="width:20px;height:20px;background:#ff8c3b;box-shadow:0 0 10px #ff8c3b88;animation-duration:3.4s;animation-delay:-1.2s"></span></span>
         <span class="obj" style="transform:rotate(150deg)"><span style="width:9px;height:9px;border-radius:50%;background:#fff;animation-duration:4.2s;animation-delay:-.9s"></span></span>
-        <span class="obj" style="transform:rotate(196deg)"><span style="width:15px;height:15px;background:#9945ff;box-shadow:0 0 10px #9945ff88;animation-duration:3.6s;animation-delay:-1.8s"></span></span>
+        <span class="obj" style="transform:rotate(196deg)"><span style="width:15px;height:15px;background:#0a8f3f;box-shadow:0 0 10px #0a8f3f88;animation-duration:3.6s;animation-delay:-1.8s"></span></span>
         <span class="obj" style="transform:rotate(238deg)"><span style="width:10px;height:10px;border-radius:50%;background:#7ff2c4;animation-duration:3.9s;animation-delay:-2.4s"></span></span>
         <span class="obj" style="transform:rotate(284deg)"><span style="width:18px;height:18px;background:#ff5c5c;box-shadow:0 0 10px #ff5c5c88;animation-duration:3.3s;animation-delay:-1.5s"></span></span>
         <span class="obj" style="transform:rotate(325deg)"><span style="width:12px;height:12px;background:#3ba9ff;animation-duration:4s;animation-delay:-.3s"></span></span>
@@ -313,7 +313,7 @@ body.in-game #elim.show{display:flex}
     </section>
 
     <section class="section">
-      <div class="center"><div class="eyebrow" style="color:#14f195">The loop</div><div class="stitle">Eat. Grow. Dominate.</div></div>
+      <div class="center"><div class="eyebrow" style="color:#00c805">The loop</div><div class="stitle">Eat. Grow. Dominate.</div></div>
       <div class="loopgrid">
         <div class="loopcard"><div class="n gg">01</div><div class="t">Swallow</div><div class="d">Drift over anything smaller than your void — pedestrians, cars, whole buildings — and gulp it down with a satisfying crunch.</div></div>
         <div class="loopcard"><div class="n gg">02</div><div class="t">Grow</div><div class="d">Every bite widens your hole. The bigger you get, the bigger the prey: skyscrapers, stadiums, monuments.</div></div>
@@ -322,7 +322,7 @@ body.in-game #elim.show{display:flex}
     </section>
 
     <section class="section">
-      <div class="center"><div class="eyebrow" style="color:#c4a3ff">Choose your run</div><div class="stitle">Three ways to swallow the city</div></div>
+      <div class="center"><div class="eyebrow" style="color:#8fe0a8">Choose your run</div><div class="stitle">Three ways to swallow the city</div></div>
       <div class="modegrid" id="modegrid"></div>
       <div class="gate">
         <button id="play2" class="btnp" style="width:100%">Play →</button>
@@ -334,12 +334,12 @@ body.in-game #elim.show{display:flex}
       <div class="bg"></div>
       <div style="position:relative;max-width:640px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:18px">
         <div class="eyebrow" style="color:#7ff2c4">Stake · swallow · settle</div>
-        <div style="font-size:clamp(28px,5vw,46px);font-weight:700;letter-spacing:-.02em;line-height:1.05">Ante up SOL.<br><span class="gg">Winner takes the pot.</span></div>
-        <p style="margin:0;font-size:15px;line-height:1.55;color:#9ba1b5;max-width:46ch">Every player stakes the same entry into an on-chain escrow. Last hole standing sweeps the whole pot, settled straight to their wallet. <b style="color:#c4a3ff;font-weight:600">Coming soon — play free today.</b></p>
+        <div style="font-size:clamp(28px,5vw,46px);font-weight:700;letter-spacing:-.02em;line-height:1.05">Ante up $SWALLOW.<br><span class="gg">Winner takes the pot.</span></div>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:#9ba1b5;max-width:46ch">Every player stakes the same entry into an on-chain escrow on Robinhood Chain. Last hole standing sweeps the whole pot, settled straight to their wallet. <b style="color:#8fe0a8;font-weight:600">Coming soon — play free today.</b></p>
         <div class="stakestats">
-          <div class="sstat"><div class="k">ENTRY</div><div class="v">0.05 ◎</div></div>
-          <div class="sstat"><div class="k">×5 PLAYERS</div><div class="v">0.25 ◎</div></div>
-          <div class="sstat win"><div class="k">WINNER TAKES</div><div class="v">0.25 ◎</div></div>
+          <div class="sstat"><div class="k">ENTRY</div><div class="v">500 $SWALLOW</div></div>
+          <div class="sstat"><div class="k">×5 PLAYERS</div><div class="v">2,500 $SWALLOW</div></div>
+          <div class="sstat win"><div class="k">WINNER TAKES</div><div class="v">2,500 $SWALLOW</div></div>
         </div>
       </div>
     </section>
@@ -365,24 +365,24 @@ body.in-game #elim.show{display:flex}
 <!-- ===== HOW TO PLAY ===== -->
 <div id="scr-howto" class="scr"><div class="pagebg">
   <div class="pageback"><button class="backbtn" id="howto-back">← Back</button></div>
-  <div class="neb" style="top:16%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(153,69,255,.22),transparent 68%)"></div>
+  <div class="neb" style="top:16%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(10,143,63,.22),transparent 68%)"></div>
   <section class="center" style="padding:clamp(24px,5vw,50px) clamp(20px,5vw,44px) clamp(18px,4vw,28px)">
-    <div class="eyebrow" style="color:#14f195">Field guide</div>
+    <div class="eyebrow" style="color:#00c805">Field guide</div>
     <h1 style="margin:0;font-size:clamp(34px,7vw,64px);font-weight:700;letter-spacing:-.03em">How to Play</h1>
     <p style="margin:12px auto 0;font-size:clamp(15px,2.4vw,19px);color:#9ba1b5;max-width:40ch;line-height:1.5">You are a black hole loose in a living city. Eat everything smaller than you, dodge everything bigger, and be the last void standing.</p>
   </section>
   <section style="padding:8px clamp(20px,5vw,44px) 0;max-width:900px;margin:0 auto"><div class="grid2">
-    <div class="gcard"><div class="eyebrow" style="color:#c4a3ff;margin-bottom:12px">Desktop</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Steer with your mouse</div><div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center"><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span><span style="font-family:var(--mono);font-size:12px;color:#8a90a2">or move the cursor — the hole chases it</span></div></div>
+    <div class="gcard"><div class="eyebrow" style="color:#8fe0a8;margin-bottom:12px">Desktop</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Steer with your mouse</div><div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center"><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span><span style="font-family:var(--mono);font-size:12px;color:#8a90a2">or move the cursor — the hole chases it</span></div></div>
     <div class="gcard"><div class="eyebrow" style="color:#7ff2c4;margin-bottom:12px">Mobile</div><div style="font-size:18px;font-weight:700;margin-bottom:10px">Drag anywhere to steer</div><div style="font-size:13.5px;color:#9ba1b5;line-height:1.5">Press and drag; the hole glides toward your thumb. One finger, one input.</div></div>
   </div></section>
   <section style="padding:clamp(34px,6vw,56px) clamp(20px,5vw,44px);max-width:900px;margin:0 auto">
-    <div class="center" style="margin-bottom:26px"><div class="eyebrow" style="color:#c4a3ff">The food chain</div><div style="font-size:clamp(22px,4vw,32px);font-weight:700">Small snacks now. Monuments later.</div></div>
-    <div class="gcard" style="padding:26px 20px"><div class="tierbars" id="howto-tiers"></div><div style="display:flex;justify-content:space-between;margin-top:14px;font-family:var(--mono);font-size:10px"><span style="color:#14f195">← safe to swallow</span><span style="color:#ff5c5c">will swallow you →</span></div></div>
+    <div class="center" style="margin-bottom:26px"><div class="eyebrow" style="color:#8fe0a8">The food chain</div><div style="font-size:clamp(22px,4vw,32px);font-weight:700">Small snacks now. Monuments later.</div></div>
+    <div class="gcard" style="padding:26px 20px"><div class="tierbars" id="howto-tiers"></div><div style="display:flex;justify-content:space-between;margin-top:14px;font-family:var(--mono);font-size:10px"><span style="color:#00c805">← safe to swallow</span><span style="color:#ff5c5c">will swallow you →</span></div></div>
   </section>
   <section style="padding:0 clamp(20px,5vw,44px) clamp(34px,6vw,56px);max-width:900px;margin:0 auto"><div class="grid2">
-    <div class="rule" style="background:rgba(20,241,149,.06);border:1px solid rgba(20,241,149,.28)"><div class="rt" style="color:#7ff2c4">Eat smaller</div><div class="rd">Anything with less mass than you gets sucked in. Chain bites for a combo.</div></div>
+    <div class="rule" style="background:rgba(0,200,5,.06);border:1px solid rgba(0,200,5,.28)"><div class="rt" style="color:#7ff2c4">Eat smaller</div><div class="rd">Anything with less mass than you gets sucked in. Chain bites for a combo.</div></div>
     <div class="rule" style="background:rgba(255,92,92,.06);border:1px solid rgba(255,92,92,.28)"><div class="rt" style="color:#ff8c8c">Flee bigger</div><div class="rd">Rivals larger than you show <b style="color:#ff5c5c">red</b> — they can eat YOU. Keep your distance.</div></div>
-    <div class="rule" style="background:rgba(153,69,255,.06);border:1px solid rgba(153,69,255,.28)"><div class="rt" style="color:#c4a3ff">Grow relentlessly</div><div class="rd">More mass = bigger hole = bigger prey. Momentum snowballs — press it.</div></div>
+    <div class="rule" style="background:rgba(10,143,63,.06);border:1px solid rgba(10,143,63,.28)"><div class="rt" style="color:#8fe0a8">Grow relentlessly</div><div class="rd">More mass = bigger hole = bigger prey. Momentum snowballs — press it.</div></div>
     <div class="rule" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)"><div class="rt" style="color:#fff">Mind the zone</div><div class="rd">In Battle, a danger zone closes in. Caught outside? You lose mass fast.</div></div>
   </div></section>
   <section style="padding:0 clamp(20px,5vw,44px) clamp(34px,6vw,56px);max-width:900px;margin:0 auto"><div style="display:flex;align-items:center;gap:16px;background:linear-gradient(90deg,rgba(0,229,255,.1),rgba(255,255,255,.02));border:1px solid rgba(0,229,255,.35);border-radius:18px;padding:20px 22px;flex-wrap:wrap"><span style="width:46px;height:46px;flex:none;border-radius:13px;background:rgba(0,229,255,.16);border:1px solid rgba(0,229,255,.5);display:flex;align-items:center;justify-content:center;font-size:22px;color:#00e5ff">⚡</span><div style="flex:1 1 220px"><div style="font-size:17px;font-weight:700;color:#fff">Speed Boost</div><div style="font-size:13px;color:#9ba1b5;line-height:1.5">Grab the cyan orb for 5 seconds of extra pace — chase a rival or bolt back into the zone.</div></div><span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#00b8d4;padding:6px 12px;border-radius:8px;background:rgba(0,229,255,.12)">5s · cyan</span></div></section>
@@ -398,8 +398,8 @@ body.in-game #elim.show{display:flex}
 <!-- ===== LOBBY ===== -->
 <div id="scr-lobby" class="scr"><div class="pagebg"><div class="veil" style="background:rgba(8,10,18,.5)"></div>
   <div class="modalwrap"><div class="card" style="max-width:420px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div><div class="eyebrow" style="color:#c4a3ff;margin:0">Battle · staked <span class="wbadge">PREVIEW</span></div><div style="font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;gap:9px" id="lobby-status">Filling up <span style="width:8px;height:8px;border-radius:50%;background:#14f195;animation:vr-pulse 1.2s infinite"></span></div></div><div style="text-align:right"><div class="eyebrow" style="color:#8a90a2;margin:0">Pot</div><div style="font-family:var(--mono);font-size:24px;font-weight:700;color:#14f195" id="lobby-pot">0.15 ◎</div></div></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:5px;overflow:hidden"><div id="lobby-bar" style="height:100%;width:60%;background:linear-gradient(90deg,#9945ff,#14f195);border-radius:5px;transition:width .4s"></div></div><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fff" id="lobby-count">3 / 5</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div><div class="eyebrow" style="color:#8fe0a8;margin:0">Battle · staked <span class="wbadge">PREVIEW</span></div><div style="font-size:22px;font-weight:700;color:#fff;display:flex;align-items:center;gap:9px" id="lobby-status">Filling up <span style="width:8px;height:8px;border-radius:50%;background:#00c805;animation:vr-pulse 1.2s infinite"></span></div></div><div style="text-align:right"><div class="eyebrow" style="color:#8a90a2;margin:0">Pot</div><div style="font-family:var(--mono);font-size:24px;font-weight:700;color:#00c805" id="lobby-pot">1,500 $SWALLOW</div></div></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:5px;overflow:hidden"><div id="lobby-bar" style="height:100%;width:60%;background:linear-gradient(90deg,#0a8f3f,#00c805);border-radius:5px;transition:width .4s"></div></div><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#fff" id="lobby-count">3 / 5</span></div>
     <div id="lobby-players"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)"><span style="font-size:12px;color:#8a90a2">Leave now for a full refund</span><button class="backbtn" id="lobby-leave" style="color:#ff8c8c;background:rgba(255,92,92,.08);border-color:rgba(255,92,92,.4)">Leave</button></div>
   </div></div>
@@ -421,7 +421,7 @@ body.in-game #elim.show{display:flex}
   <div style="padding:2px 26px 32px">
     <div class="skinhead"><div><div style="font-size:26px;font-weight:700;color:#fff">Skins</div><div style="font-size:13px;color:#9ba1b5;margin-top:2px">Earned by playing. Wear it your way.</div></div><div style="display:flex;gap:8px"><div class="chip2" id="skins-count" style="background:rgba(240,212,138,.1);border:1px solid rgba(240,212,138,.3);color:#f0d48a">3 / 8 unlocked</div></div></div>
     <div class="skinwrap">
-      <div class="skinprev"><div class="eyebrow" style="color:#8a90a2;margin:0">Live preview</div><div class="pv"><span class="rr"></span><span class="fill" id="skin-prev-fill"></span><span class="hole"></span></div><div class="center"><div style="font-size:18px;font-weight:700;color:#fff" id="skin-prev-name">Nebula</div><div style="font-family:var(--mono);font-size:11px;color:#14f195;margin-top:2px" id="skin-prev-state">Equipped</div></div></div>
+      <div class="skinprev"><div class="eyebrow" style="color:#8a90a2;margin:0">Live preview</div><div class="pv"><span class="rr"></span><span class="fill" id="skin-prev-fill"></span><span class="hole"></span></div><div class="center"><div style="font-size:18px;font-weight:700;color:#fff" id="skin-prev-name">Nebula</div><div style="font-family:var(--mono);font-size:11px;color:#00c805;margin-top:2px" id="skin-prev-state">Equipped</div></div></div>
       <div class="skingrid" id="skins-grid"></div>
     </div>
   </div>
@@ -1162,7 +1162,7 @@ function updateHud(me) {
     const meR = me ? me.radius : 0;
     const html = '<div class="lbh">Leaderboard</div>' + arr.slice(0, 6).map((r, i) => {
       const threat = !r.me && meR > 0 && r.radius > meR * 1.05;
-      const col = r.me ? "#14f195" : (threat ? "#ff5c5c" : "#" + ((r.color >>> 0).toString(16).padStart(6, "0")));
+      const col = r.me ? "#00c805" : (threat ? "#ff5c5c" : "#" + ((r.color >>> 0).toString(16).padStart(6, "0")));
       return `<div class="row ${r.me ? "me" : ""}"><span class="rk">${i + 1}</span><span class="dot" style="background:${col}"></span><span class="nm">${esc(r.name)}</span>${threat ? '<span class="th">▲</span>' : ""}<span class="ms">${Math.round(r.score)}</span></div>`;
     }).join("");
     if (html !== lastBoardHtml) { lastBoardHtml = html; $("#board").innerHTML = html; }
@@ -1219,7 +1219,7 @@ function drawMinimap(me, dt) {
   if (me) {
     const p = toM(predicted.has ? predicted.x : me.x, predicted.has ? predicted.z : me.z);
     x.fillStyle = "#fff"; x.beginPath(); x.arc(p[0], p[1], Math.max(2.5, me.radius * s * 1.6), 0, 7); x.fill();
-    x.lineWidth = 1.6; x.strokeStyle = "#14f195"; x.stroke();
+    x.lineWidth = 1.6; x.strokeStyle = "#00c805"; x.stroke();
   }
 }
 function drawDebug() {
@@ -1258,9 +1258,9 @@ function toast(msg) {
 
 // ---- landing: modes (Classic/Battle free · Staked coming-soon) ----
 const MODES = [
-  { id: "arena",  title: "Classic", desc: "5-minute free-for-all. Highest mass wins.", badge: "FREE", bc: "#14f195" },
+  { id: "arena",  title: "Classic", desc: "5-minute free-for-all. Highest mass wins.", badge: "FREE", bc: "#00c805" },
   { id: "battle", title: "Battle",  desc: "Last hole standing. The zone closes in.",  badge: "LAST STANDING", bc: "#ff5c5c" },
-  { id: "staked", title: "Staked",  desc: "Ante up SOL. Winner takes the pot.",       badge: "SOON", bc: "#c4a3ff" },
+  { id: "staked", title: "Staked",  desc: "Ante up $SWALLOW. Winner takes the pot.",       badge: "SOON", bc: "#8fe0a8" },
 ];
 function renderModes() {
   const g = $("#modegrid"); if (!g) return;
@@ -1341,7 +1341,7 @@ function renderSkins() {
   g.innerHTML = SKINS.map((k) => {
     const equipped = k.id === eqId, locked = !skinUnlocked(k);
     const label = equipped ? "EQUIPPED" : locked ? k.unlock.label + " · " + k.unlock.prog() : "Equip";
-    const col = equipped ? "#14f195" : locked ? "#c4a3ff" : "#c6cad6";
+    const col = equipped ? "#00c805" : locked ? "#8fe0a8" : "#c6cad6";
     return `<div class="stile${equipped ? " eq" : ""}" data-skin="${k.id}"><div class="sw${locked ? " lk" : ""}" style="background:${k.bg}">${locked ? '<span class="lock">🔒</span>' : ""}</div><div class="snm">${k.name}</div><div class="sst" style="color:${col}">${label}</div></div>`;
   }).join("");
   g.querySelectorAll(".stile").forEach((t) => t.addEventListener("click", () => equipSkin(t.dataset.skin)));
@@ -1352,28 +1352,28 @@ function renderTiers() {
   const names = ["Person", "Car", "Tree", "Bus", "House", "Factory", "Tower", "Stadium", "Monument"];
   el.innerHTML = names.map((name, i) => { const t = i / (names.length - 1), hue = Math.round(150 - t * 150); return `<div class="tier"><div style="width:26px;height:${24 + i * 12}px;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,hsl(${hue} 72% 62%),hsl(${hue} 66% 42%));box-shadow:0 5px 14px hsl(${hue} 66% 45% / .4)"></div><div class="tn">${name}</div></div>`; }).join("");
 }
-// ---- wallet & stake (simulated preview — real SOL staking is coming soon) ----
+// ---- wallet & stake (simulated preview — real $SWALLOW staking on Robinhood Chain is coming soon) ----
 let walletTimer = null;
 function renderWallet(step) {
   const b = $("#wallet-body"); if (!b) return; clearTimeout(walletTimer);
   const preview = `<div style="font-family:var(--mono);font-size:10px;color:#8a90a2;text-align:center;margin-top:14px">Preview · staking coming soon (simulated)</div>`;
   if (step === "connect") {
-    b.innerHTML = `<div style="text-align:center"><div style="width:56px;height:56px;margin:2px auto 14px;border-radius:16px;background:linear-gradient(135deg,#9945ff,#14f195)"></div><div style="font-size:22px;font-weight:700;color:#fff">Connect wallet</div><div style="font-size:13px;color:#9ba1b5;margin:7px 0 20px;line-height:1.4">Play staked matches, hold your winnings, own your skins. We never see your keys.</div><button id="w-next" class="btnfull">Connect with Phantom</button>${preview}</div>`;
+    b.innerHTML = `<div style="text-align:center"><div style="width:56px;height:56px;margin:2px auto 14px;border-radius:16px;background:linear-gradient(135deg,#0a8f3f,#00c805)"></div><div style="font-size:22px;font-weight:700;color:#fff">Connect wallet</div><div style="font-size:13px;color:#9ba1b5;margin:7px 0 20px;line-height:1.4">Play staked matches, hold your winnings, own your skins. MetaMask, Rabby or any EVM wallet — we never see your keys.</div><button id="w-next" class="btnfull">Connect Wallet</button>${preview}</div>`;
     $("#w-next").onclick = () => renderWallet("signing");
   } else if (step === "signing") {
-    b.innerHTML = `<div style="text-align:center;padding:8px 0"><div style="width:46px;height:46px;margin:6px auto 16px;border-radius:50%;border:3px solid rgba(153,69,255,.25);border-top-color:#9945ff;animation:vr-spin 1s linear infinite"></div><div style="font-size:20px;font-weight:700;color:#fff">Sign in with Solana</div><div style="font-size:13px;color:#9ba1b5;margin:8px 0 4px;line-height:1.4">Approve the signature request to prove you own this wallet.</div><div style="font-family:var(--mono);font-size:11px;color:#8a90a2;margin-top:14px;padding:9px;background:rgba(255,255,255,.04);border-radius:9px">no gas · no transaction · just a signature</div></div>`;
+    b.innerHTML = `<div style="text-align:center;padding:8px 0"><div style="width:46px;height:46px;margin:6px auto 16px;border-radius:50%;border:3px solid rgba(10,143,63,.25);border-top-color:#0a8f3f;animation:vr-spin 1s linear infinite"></div><div style="font-size:20px;font-weight:700;color:#fff">Sign in with Ethereum</div><div style="font-size:13px;color:#9ba1b5;margin:8px 0 4px;line-height:1.4">Approve the signature request to prove you own this wallet.</div><div style="font-family:var(--mono);font-size:11px;color:#8a90a2;margin-top:14px;padding:9px;background:rgba(255,255,255,.04);border-radius:9px">no gas · no transaction · just a signature</div></div>`;
     walletTimer = setTimeout(() => renderWallet("connected"), 1400);
   } else if (step === "connected") {
-    b.innerHTML = `<div style="text-align:center"><div style="width:52px;height:52px;margin:2px auto 14px;border-radius:50%;background:rgba(20,241,149,.16);border:1px solid rgba(20,241,149,.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#14f195">✓</div><div style="font-size:22px;font-weight:700;color:#fff">Wallet connected</div><div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;margin:16px 0"><div style="display:flex;align-items:center;gap:9px"><span style="width:10px;height:10px;border-radius:50%;background:#14f195"></span><span style="font-family:var(--mono);font-size:13px;color:#fff">9xQe…4f2a</span></div><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#7ff2c4">1.20 ◎</span></div><button id="w-next" class="btnfull">Continue</button></div>`;
+    b.innerHTML = `<div style="text-align:center"><div style="width:52px;height:52px;margin:2px auto 14px;border-radius:50%;background:rgba(0,200,5,.16);border:1px solid rgba(0,200,5,.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#00c805">✓</div><div style="font-size:22px;font-weight:700;color:#fff">Wallet connected</div><div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;margin:16px 0"><div style="display:flex;align-items:center;gap:9px"><span style="width:10px;height:10px;border-radius:50%;background:#00c805"></span><span style="font-family:var(--mono);font-size:13px;color:#fff">0x9fQe…4f2a</span></div><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#7ff2c4">12,400 $SWALLOW</span></div><button id="w-next" class="btnfull">Continue</button></div>`;
     $("#w-next").onclick = () => renderWallet("stake");
   } else if (step === "stake") {
-    b.innerHTML = `<div><div style="font-size:20px;font-weight:700;color:#fff;text-align:center;margin-bottom:4px">Confirm your stake</div><div style="font-size:13px;color:#9ba1b5;text-align:center;margin-bottom:18px">Battle · last hole standing</div><div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:4px 14px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)"><span style="font-size:13px;color:#9ba1b5">Entry stake</span><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#fff">0.05 ◎</span></div><div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)"><span style="font-size:13px;color:#9ba1b5">Players</span><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#fff">5</span></div><div style="display:flex;justify-content:space-between;padding:11px 0"><span style="font-size:13px;color:#c4a3ff">Winner takes</span><span style="font-family:var(--mono);font-size:16px;font-weight:700;color:#14f195">0.25 ◎</span></div></div><div style="display:flex;gap:9px"><button id="w-cancel" class="btnghost" style="flex:1">Decline</button><button id="w-next" class="btnfull" style="flex:2">Approve 0.05 ◎</button></div></div>`;
+    b.innerHTML = `<div><div style="font-size:20px;font-weight:700;color:#fff;text-align:center;margin-bottom:4px">Confirm your stake</div><div style="font-size:13px;color:#9ba1b5;text-align:center;margin-bottom:18px">Battle · last hole standing</div><div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:4px 14px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)"><span style="font-size:13px;color:#9ba1b5">Entry stake</span><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#fff">500 $SWALLOW</span></div><div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)"><span style="font-size:13px;color:#9ba1b5">Players</span><span style="font-family:var(--mono);font-size:14px;font-weight:700;color:#fff">5</span></div><div style="display:flex;justify-content:space-between;padding:11px 0"><span style="font-size:13px;color:#8fe0a8">Winner takes</span><span style="font-family:var(--mono);font-size:16px;font-weight:700;color:#00c805">2,500 $SWALLOW</span></div></div><div style="display:flex;gap:9px"><button id="w-cancel" class="btnghost" style="flex:1">Decline</button><button id="w-next" class="btnfull" style="flex:2">Approve 500 $SWALLOW</button></div></div>`;
     $("#w-next").onclick = () => renderWallet("pending"); $("#w-cancel").onclick = () => renderWallet("error");
   } else if (step === "pending") {
-    b.innerHTML = `<div style="text-align:center;padding:8px 0"><div style="width:46px;height:46px;margin:6px auto 16px;border-radius:50%;border:3px solid rgba(20,241,149,.25);border-top-color:#14f195;animation:vr-spin 1s linear infinite"></div><div style="font-size:20px;font-weight:700;color:#fff">Confirming on Solana…</div><div style="font-size:13px;color:#9ba1b5;margin-top:8px">Your stake is being locked into the match escrow.</div><div style="font-family:var(--mono);font-size:11px;color:#8a90a2;margin-top:14px;padding:9px;background:rgba(255,255,255,.04);border-radius:9px">tx 5Kd9…a1c · ~2s</div></div>`;
+    b.innerHTML = `<div style="text-align:center;padding:8px 0"><div style="width:46px;height:46px;margin:6px auto 16px;border-radius:50%;border:3px solid rgba(0,200,5,.25);border-top-color:#00c805;animation:vr-spin 1s linear infinite"></div><div style="font-size:20px;font-weight:700;color:#fff">Confirming on Robinhood Chain…</div><div style="font-size:13px;color:#9ba1b5;margin-top:8px">Your stake is being locked into the match escrow.</div><div style="font-family:var(--mono);font-size:11px;color:#8a90a2;margin-top:14px;padding:9px;background:rgba(255,255,255,.04);border-radius:9px">tx 0x5d9f…a1c · ~2s</div></div>`;
     walletTimer = setTimeout(() => renderWallet("confirmed"), 1600);
   } else if (step === "confirmed") {
-    b.innerHTML = `<div style="text-align:center"><div style="width:52px;height:52px;margin:2px auto 14px;border-radius:50%;background:rgba(20,241,149,.16);border:1px solid rgba(20,241,149,.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#14f195">✓</div><div style="font-size:22px;font-weight:700;color:#fff">You're in</div><div style="font-size:13px;color:#9ba1b5;margin:7px 0 16px">Staked 0.05 ◎ · pot is now <span style="color:#14f195;font-weight:600">0.25 ◎</span></div><button id="w-next" class="btnfull">Enter lobby</button></div>`;
+    b.innerHTML = `<div style="text-align:center"><div style="width:52px;height:52px;margin:2px auto 14px;border-radius:50%;background:rgba(0,200,5,.16);border:1px solid rgba(0,200,5,.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#00c805">✓</div><div style="font-size:22px;font-weight:700;color:#fff">You're in</div><div style="font-size:13px;color:#9ba1b5;margin:7px 0 16px">Staked 500 $SWALLOW · pot is now <span style="color:#00c805;font-weight:600">2,500 $SWALLOW</span></div><button id="w-next" class="btnfull">Enter lobby</button></div>`;
     $("#w-next").onclick = () => enterLobby();
   } else if (step === "error") {
     b.innerHTML = `<div style="text-align:center"><div style="width:52px;height:52px;margin:2px auto 14px;border-radius:50%;background:rgba(255,64,64,.14);border:1px solid rgba(255,64,64,.5);display:flex;align-items:center;justify-content:center;font-size:24px;color:#ff5c5c">!</div><div style="font-size:21px;font-weight:700;color:#fff">Request rejected</div><div style="font-size:13px;color:#9ba1b5;margin:7px 0 16px;line-height:1.4">You declined in the wallet. Nothing was charged.</div><button id="w-next" class="btnghost" style="width:100%">Try again</button></div>`;
@@ -1384,8 +1384,8 @@ function renderWallet(step) {
 let lobbyTimer = null;
 function renderLobbyPlayers() {
   const el = $("#lobby-players"); if (!el) return;
-  const ps = [{ n: "You", c: "#14f195", s: true, you: true }, { n: "Nyx", c: "#9945ff", s: true }, { n: "Maw", c: "#ff8c3b", s: true }, { n: "Rift", c: "#ffd23b", s: false }, { n: "Hex", c: "#ff5ca8", s: false }];
-  el.innerHTML = ps.map((p) => `<div style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;margin-bottom:6px;background:${p.you ? "rgba(20,241,149,.1)" : "rgba(255,255,255,.04)"};border:1px solid ${p.you ? "rgba(20,241,149,.35)" : "rgba(255,255,255,.07)"}"><span style="width:12px;height:12px;border-radius:50%;flex:none;background:${p.c}"></span><span style="font-family:var(--disp);font-size:15px;font-weight:${p.you ? 700 : 500};color:#fff">${p.n}</span>${p.s ? '<span style="margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:700;color:#7ff2c4">staked ✓</span>' : '<span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:#8a90a2;animation:vr-pulse 1.4s infinite">waiting…</span>'}</div>`).join("");
+  const ps = [{ n: "You", c: "#00c805", s: true, you: true }, { n: "Nyx", c: "#0a8f3f", s: true }, { n: "Maw", c: "#ff8c3b", s: true }, { n: "Rift", c: "#ffd23b", s: false }, { n: "Hex", c: "#ff5ca8", s: false }];
+  el.innerHTML = ps.map((p) => `<div style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;margin-bottom:6px;background:${p.you ? "rgba(0,200,5,.1)" : "rgba(255,255,255,.04)"};border:1px solid ${p.you ? "rgba(0,200,5,.35)" : "rgba(255,255,255,.07)"}"><span style="width:12px;height:12px;border-radius:50%;flex:none;background:${p.c}"></span><span style="font-family:var(--disp);font-size:15px;font-weight:${p.you ? 700 : 500};color:#fff">${p.n}</span>${p.s ? '<span style="margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:700;color:#7ff2c4">staked ✓</span>' : '<span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:#8a90a2;animation:vr-pulse 1.4s infinite">waiting…</span>'}</div>`).join("");
 }
 function enterLobby() {
   renderLobbyPlayers(); showScreen("lobby"); clearTimeout(lobbyTimer);
@@ -1393,7 +1393,7 @@ function enterLobby() {
     const st = $("#lobby-status"); if (st && st.firstChild) st.firstChild.textContent = "All in — starting… ";
     const c = $("#lobby-count"); if (c) c.textContent = "5 / 5";
     const bar = $("#lobby-bar"); if (bar) bar.style.width = "100%";
-    const pot = $("#lobby-pot"); if (pot) pot.textContent = "0.25 ◎";
+    const pot = $("#lobby-pot"); if (pot) pot.textContent = "2,500 $SWALLOW";
     lobbyTimer = setTimeout(() => { selectedRoom = "battle"; startCountdown(() => play()); }, 1500);
   }, 2400);
 }
@@ -1425,13 +1425,13 @@ function showResults(m) {
   try { localStorage.setItem("vr_best", best); localStorage.setItem("vr_games", games); localStorage.setItem("vr_wins", wins); } catch (e) {}
   const devoured = m && m.reason === "devoured";
   const title = devoured && won ? "CITY DEVOURED" : won ? "You win!" : elim ? "Eliminated" : "You placed #" + myRank;
-  const color = devoured && won ? "#f0d48a" : won ? "#14f195" : elim ? "#ff4040" : "#c4a3ff";
+  const color = devoured && won ? "#f0d48a" : won ? "#00c805" : elim ? "#ff4040" : "#8fe0a8";
   const sub = devoured ? "The whole city is gone. Nothing survived." : won ? "Biggest void on the board." : elim ? "The zone closed in. No respawns." : "Strong run — keep climbing.";
   // run grade S/A/B/C — mastery chase (place + mass + combo + kills + big-eat)
   const placePts = won ? 40 : myRank === 2 ? 28 : myRank === 3 ? 20 : 10;
   const gp = placePts + Math.min(25, runMass / 400) + Math.min(16, (meH ? meH.bestCombo : 1) * 2) + Math.min(18, (meH ? meH.kills : 0) * 6) + ((meH && meH.bigEat >= 16) ? 8 : 0);
   const grade = gp >= 85 ? "S" : gp >= 65 ? "A" : gp >= 45 ? "B" : "C";
-  const gradeCol = { S: "#f0d48a", A: "#14f195", B: "#c4a3ff", C: "#8a90a2" }[grade];
+  const gradeCol = { S: "#f0d48a", A: "#00c805", B: "#8fe0a8", C: "#8a90a2" }[grade];
   try { const g0 = JSON.parse(localStorage.getItem("vr_grades") || "{}"); g0[grade] = (g0[grade] || 0) + 1; localStorage.setItem("vr_grades", JSON.stringify(g0)); } catch (e) {}
   // achievements: fold run stats into records, grant any earned skins
   const freshSkins = checkUnlocks(meH, won, m && m.reason);
@@ -1440,22 +1440,22 @@ function showResults(m) {
   try { if (cityPct > LSn("vr_bestCityPct")) localStorage.setItem("vr_bestCityPct", cityPct); } catch (e) {}
   const medals = ["#f0d48a", "#c8ccd8", "#d9a066"];
   const rows = arr.slice(0, 5).map((p, i) => {
-    const med = medals[i] || "#5a6072", dot = p.me ? "#14f195" : "#" + ((p.color >>> 0).toString(16).padStart(6, "0"));
-    const bg = p.me ? "background:rgba(20,241,149,.12);border:1px solid rgba(20,241,149,.4)" : (i === 0 ? "background:rgba(240,212,138,.1);border:1px solid rgba(240,212,138,.35)" : "background:rgba(255,255,255,.04);border:1px solid transparent");
+    const med = medals[i] || "#5a6072", dot = p.me ? "#00c805" : "#" + ((p.color >>> 0).toString(16).padStart(6, "0"));
+    const bg = p.me ? "background:rgba(0,200,5,.12);border:1px solid rgba(0,200,5,.4)" : (i === 0 ? "background:rgba(240,212,138,.1);border:1px solid rgba(240,212,138,.35)" : "background:rgba(255,255,255,.04);border:1px solid transparent");
     return `<div class="rrow" style="${bg}"><span class="rk" style="color:${med}">${i + 1}</span><span class="dot" style="background:${dot}"></span><span class="nm"${p.me || i === 0 ? ' style="font-weight:700"' : ""}>${esc(p.name)}</span><span class="ms">${p.score.toLocaleString()}</span></div>`;
   }).join("");
   const chips = [];
-  if (won) chips.push('<span class="badgechip" style="background:linear-gradient(90deg,rgba(153,69,255,.22),rgba(20,241,149,.22));border:1px solid rgba(20,241,149,.4);color:#7ff2c4">★ VICTORY</span>');
+  if (won) chips.push('<span class="badgechip" style="background:linear-gradient(90deg,rgba(10,143,63,.22),rgba(0,200,5,.22));border:1px solid rgba(0,200,5,.4);color:#7ff2c4">★ VICTORY</span>');
   if (newHigh) chips.push('<span class="badgechip" style="background:rgba(240,212,138,.16);border:1px solid rgba(240,212,138,.4);color:#f0d48a">NEW HIGH SCORE</span>');
   freshSkins.forEach((nm) => chips.push(`<span class="badgechip" style="background:rgba(240,212,138,.2);border:1px solid rgba(240,212,138,.55);color:#ffd166">🔓 SKIN UNLOCKED — ${esc(nm)}</span>`));
   const badges = chips.length ? `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">${chips.join("")}</div>` : "";
   $("#results-body").innerHTML =
     `<div style="text-align:center;margin-bottom:18px"><div style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8a90a2;margin-bottom:6px">${room.state.mode === "battle" ? "Battle" : "Classic"} · Match over</div><div style="display:flex;align-items:center;justify-content:center;gap:16px"><div style="font-size:44px;font-weight:700;letter-spacing:-.02em;color:${color};line-height:1">${title}</div><div style="font-family:var(--mono);font-size:44px;font-weight:700;color:${gradeCol};text-shadow:0 0 22px ${gradeCol}66" title="Run grade">${grade}</div></div><div style="font-size:14px;color:#9ba1b5;margin-top:7px">${sub} · You devoured ${cityPct}% of the city${LSn("vr_bestCityPct") > cityPct ? " (best " + LSn("vr_bestCityPct") + "%)" : ""}</div></div>`
     + badges
-    + `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:13px 15px;margin-bottom:16px"><div><div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#8a90a2">Payout</div><div style="font-size:12px;color:#9ba1b5;margin-top:3px">Free match · SOL staking coming soon</div></div><div style="font-family:var(--mono);font-size:20px;font-weight:700;color:#c4a3ff;white-space:nowrap">FREE</div></div>`
+    + `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:13px 15px;margin-bottom:16px"><div><div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#8a90a2">Payout</div><div style="font-size:12px;color:#9ba1b5;margin-top:3px">Free match · $SWALLOW staking coming soon</div></div><div style="font-family:var(--mono);font-size:20px;font-weight:700;color:#8fe0a8;white-space:nowrap">FREE</div></div>`
     + rows
-    + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0"><div class="rstat"><div class="k">This run</div><div class="v">${runMass.toLocaleString()}</div></div><div class="rstat"><div class="k">Final size</div><div class="v">Ø ${meH ? Math.round(meH.radius * 2) : "—"}m · Lv ${runPeakLevel}</div></div><div class="rstat"><div class="k">Lifetime high</div><div class="v" style="color:#c4a3ff">${best.toLocaleString()}</div></div><div class="rstat"><div class="k">Wins / rounds</div><div class="v">${wins} / ${games}</div></div></div>`
-    + `<div style="display:flex;gap:9px"><button id="r-again" class="btnfull" style="flex:1;box-shadow:0 8px 22px rgba(20,241,149,.25)">Play again</button><button id="r-lobby" class="btnghost">Lobby</button><button id="r-share" class="btnghost" style="width:48px;padding:13px 0">↗</button></div>`;
+    + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0"><div class="rstat"><div class="k">This run</div><div class="v">${runMass.toLocaleString()}</div></div><div class="rstat"><div class="k">Final size</div><div class="v">Ø ${meH ? Math.round(meH.radius * 2) : "—"}m · Lv ${runPeakLevel}</div></div><div class="rstat"><div class="k">Lifetime high</div><div class="v" style="color:#8fe0a8">${best.toLocaleString()}</div></div><div class="rstat"><div class="k">Wins / rounds</div><div class="v">${wins} / ${games}</div></div></div>`
+    + `<div style="display:flex;gap:9px"><button id="r-again" class="btnfull" style="flex:1;box-shadow:0 8px 22px rgba(0,200,5,.25)">Play again</button><button id="r-lobby" class="btnghost">Lobby</button><button id="r-share" class="btnghost" style="width:48px;padding:13px 0">↗</button></div>`;
   $("#r-again").onclick = () => { runPeakLevel = meH ? meH.level : 1; showScreen("game"); };
   $("#r-lobby").onclick = () => leaveToLanding();
   $("#r-share").onclick = () => toast("Share — coming soon");

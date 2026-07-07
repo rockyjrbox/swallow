@@ -82,7 +82,7 @@ reconcile to server pos               hole-vs-hole elimination
    compensation, movement/eat validation tightening, collusion/Sybil detection.
 3. **Swap renderer**: drive the existing 3D Three.js `voidrun` client off this
    server's state instead of its local simulation.
-4. **Phase 3 — Solana on devnet**: SIWS wallet auth + Anchor escrow (PDA vault,
+4. **Phase 3 — Robinhood Chain on devnet**: SIWS wallet auth + Anchor escrow (PDA vault,
    `has_one = authority` settlement, timeout refund). Devnet only.
 5. **Phase 4 — mainnet** *(only after a Latvian/EU gaming lawyer signs off on the
    paid mode — pay-to-enter winner-take-all likely triggers gambling regulation).*

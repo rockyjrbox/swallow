@@ -1,6 +1,6 @@
 # VOIDRUN — Launch Guide
 
-Free-to-play launch. The Solana/staking surfaces are intentionally **"coming soon"** (simulated) — no on-chain code runs. One Node process serves the 3D client **and** the Colyseus WebSocket server on the same origin, so the client's `ws://`/`wss://` derivation "just works" behind a single TLS proxy (no CORS, no split origin).
+Free-to-play launch. The staking surfaces ($SWALLOW on Robinhood Chain) are intentionally **"coming soon"** (simulated) — no on-chain code runs. One Node process serves the 3D client **and** the Colyseus WebSocket server on the same origin, so the client's `ws://`/`wss://` derivation "just works" behind a single TLS proxy (no CORS, no split origin).
 
 ## What's already hardened (done)
 
