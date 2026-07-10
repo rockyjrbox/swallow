@@ -279,13 +279,14 @@ body.in-game #elim.show{display:flex}
     <div class="lhead">
       <div style="display:flex;align-items:center;gap:10px"><span class="hmark"></span><span class="wm"><span class="gg">Swallow</span></span></div>
       <div style="display:flex;align-items:center;gap:8px">
+        <a class="backbtn" href="https://x.com/swallow_rh" target="_blank" rel="noopener" title="Follow @swallow_rh" style="padding:9px 13px;text-decoration:none">𝕏</a>
         <button class="backbtn" id="skins-open" style="padding:9px 13px">Skins</button>
       </div>
     </div>
 
     <section class="hero">
       <div class="ticker">
-        <span style="display:flex;align-items:center;gap:6px"><span class="liveDot"></span>1,284 playing now</span>
+        <span style="display:flex;align-items:center;gap:6px"><span class="liveDot"></span><span id="live-count">32</span>&nbsp;playing now</span>
         <span class="sep">·</span><span style="color:#7ff2c4;font-weight:700">Free — no wallet needed</span>
         <span class="sep">·</span><span style="color:#8fe0a8">staking coming soon</span>
       </div>
@@ -347,7 +348,7 @@ body.in-game #elim.show{display:flex}
     <section class="section footcta">
       <div style="font-size:clamp(30px,6vw,58px);font-weight:700;letter-spacing:-.03em;margin-bottom:22px">Swallow it all.</div>
       <button id="play3" class="btnp" style="flex:none;padding:17px 44px;font-size:18px">Play Swallow →</button>
-      <div style="margin-top:26px;font-family:var(--mono);font-size:10px;color:#4a5064;letter-spacing:.05em">Prototype · staking coming soon</div>
+      <div style="margin-top:26px;font-family:var(--mono);font-size:10px;color:#4a5064;letter-spacing:.05em">Prototype · staking coming soon · <a href="https://x.com/swallow_rh" target="_blank" rel="noopener" style="color:#8fe0a8;text-decoration:none">𝕏 @swallow_rh</a></div>
     </section>
   </div>
 </div>
@@ -1289,6 +1290,16 @@ function renderMeta() {
 function startGame() { if (selectedRoom === "staked") { toast("Staked — coming soon"); return; } play(); }
 
 renderModes(); renderMeta();
+// "playing now" counter: starts near 32 and drifts realistically within 24–45
+{
+  const el = document.getElementById("live-count");
+  if (el) {
+    let n = 28 + ((Math.random() * 10) | 0);
+    const upd = () => { n = Math.max(24, Math.min(45, n + ((Math.random() * 7) | 0) - 3)); el.textContent = n; };
+    upd();
+    setInterval(upd, 5000 + Math.random() * 5000);
+  }
+}
 ["play", "play2", "play3"].forEach((id) => { const b = document.getElementById(id); if (b) b.addEventListener("click", startGame); });
 { const l = $("#howto-link"); if (l) l.addEventListener("click", () => showScreen("howto")); }
 $("#name").addEventListener("keydown", (e) => { if (e.key === "Enter") startGame(); });
